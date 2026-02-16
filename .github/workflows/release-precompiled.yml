@@ -29,7 +29,7 @@ jobs:
             target: aarch64-apple-darwin
           - name: windows-x86_64
             runs_on: windows-2022
-            target: x86_64-windows-msvc
+            target: x86_64-windows-gnu
 
     steps:
       - name: Checkout
@@ -107,9 +107,17 @@ jobs:
           # Keep this list conservative to avoid CI breakage from formula changes.
           brew install cmake molten-vk vulkan-headers vulkan-loader shaderc
 
-      - name: Set up MSVC dev environment (Windows)
+      - name: Set up llvm-mingw (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        run: |
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-ucrt-x86_64.zip"
+          $output = "$env:TEMP\llvm-mingw.zip"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Expand-Archive -Path $output -DestinationPath $env:TEMP\mingw
+          $mingwPath = "$env:TEMP\mingw\llvm-mingw-20251216-ucrt-x86_64\bin"
+          echo "MINGW_PREFIX=$env:TEMP\mingw\llvm-mingw-20251216-ucrt-x86_64" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $env:PATH = "$mingwPath;$env:PATH"
+          echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v5
@@ -157,10 +165,10 @@ jobs:
 
           Push-Location godot
           # Build host editor (for dumping GDExtension API).
-          scons platform=windows target=editor dev_mode=yes windows_subsystem=console use_mingw=no
+          scons platform=windows target=editor dev_mode=yes windows_subsystem=console use_mingw=yes use_llvm=yes
 
           # Build target libgodot (shared library for embedding).
-          scons platform=windows target=editor arch=x86_64 opengl3=yes library_type=shared_library production=yes optimize=speed_trace lto=full deprecated=yes windows_subsystem=console use_mingw=no
+          scons platform=windows target=editor arch=x86_64 opengl3=yes library_type=shared_library production=yes optimize=speed_trace lto=full deprecated=yes windows_subsystem=console use_mingw=yes use_llvm=yes
 
           New-Item -ItemType Directory -Force -Path ..\build\gdextension | Out-Null
           Copy-Item -Force bin\godot.windows.editor.x86_64.exe ..\build\godot.exe
