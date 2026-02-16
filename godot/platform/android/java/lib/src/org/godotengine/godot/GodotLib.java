@@ -31,8 +31,7 @@
 package org.godotengine.godot;
 
 public class GodotLib {
-
-	private static IGodotLib  godotLibImpl;
+	private static IGodotLib godotLibImpl;
 
 	public static IGodotLib getInstance() {
 		if (godotLibImpl == null) {
@@ -41,7 +40,7 @@ public class GodotLib {
 		return GodotLib.godotLibImpl;
 	}
 
-	public static void setGodotLibImpl(IGodotLib  godotLibImpl) {
+	public static void setGodotLibImpl(IGodotLib godotLibImpl) {
 		GodotLib.godotLibImpl = godotLibImpl;
 	}
 }

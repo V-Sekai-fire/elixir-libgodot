@@ -71,7 +71,6 @@ void *RenderingNativeSurfaceAndroid::get_native_id() const {
 	return nullptr;
 }
 
-
 RenderingNativeSurfaceAndroid::RenderingNativeSurfaceAndroid() {
 	// Does nothing.
 }

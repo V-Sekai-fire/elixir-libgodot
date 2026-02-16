@@ -35,16 +35,16 @@
 #include "libgodot_android.h"
 #include "main/main.h"
 
+#include "api/java_class_wrapper.h"
 #include "dir_access_jandroid.h"
 #include "file_access_android.h"
 #include "file_access_filesystem_jandroid.h"
 #include "java_godot_io_wrapper.h"
+#include "java_godot_wrapper.h"
 #include "net_socket_android.h"
 #include "os_android.h"
-#include "thread_jandroid.h"
-#include "java_godot_wrapper.h"
-#include "api/java_class_wrapper.h"
 #include "plugin/godot_plugin_jni.h"
+#include "thread_jandroid.h"
 
 static OS_Android *os = nullptr;
 
@@ -71,9 +71,9 @@ static GodotJavaWrapper *godot_wrapper = nullptr;
 static JavaClassWrapper *java_class_wrapper = nullptr;
 static jobject class_loader = nullptr;
 
-extern LIBGODOT_API GDExtensionObjectPtr libgodot_create_godot_instance_android(int p_argc, char *p_argv[], GDExtensionInitializationFunction p_init_func, JNIEnv* env, jobject p_asset_manager, jobject p_net_utils, jobject p_directory_access_handler, jobject p_file_access_handler, jobject p_godot_io_wrapper, jobject p_godot_wrapper, jobject p_class_loader) {
+extern LIBGODOT_API GDExtensionObjectPtr libgodot_create_godot_instance_android(int p_argc, char *p_argv[], GDExtensionInitializationFunction p_init_func, JNIEnv *env, jobject p_asset_manager, jobject p_net_utils, jobject p_directory_access_handler, jobject p_file_access_handler, jobject p_godot_io_wrapper, jobject p_godot_wrapper, jobject p_class_loader) {
 	ERR_FAIL_COND_V_MSG(instance != nullptr, nullptr, "Only one Godot Instance may be created.");
-	
+
 	godot_init_profiler();
 
 	JavaVM *jvm;
@@ -122,15 +122,15 @@ extern LIBGODOT_API void libgodot_destroy_godot_instance(GDExtensionObjectPtr p_
 		instance = nullptr;
 		if (java_class_wrapper) {
 			unregister_plugins_singletons();
-        	memdelete(java_class_wrapper);
-    	}
+			memdelete(java_class_wrapper);
+		}
 		Main::cleanup(true);
 		if (godot_io_wrapper) {
-        	delete godot_io_wrapper;
-    	}
+			delete godot_io_wrapper;
+		}
 		if (godot_wrapper) {
-        	delete godot_wrapper;
-    	}
+			delete godot_wrapper;
+		}
 		delete os;
 		AudioDriverManager::cleanup();
 		os = nullptr;

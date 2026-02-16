@@ -1,4 +1,5 @@
 build/
+.scons_cache/
 
 libgodot_framework/libgodot.xcodeproj/project.xcworkspace/xcuserdata/
 libgodot_framework/libgodot/libgodot.a
@@ -7,5 +8,7 @@ libgodot_framework/libgodot/libgodot.a
 samples/elixir_sample/_build/
 samples/elixir_sample/priv/
 samples/elixir_sample/deps/
+samples/elixir_sample/dist/
 .DS_Store
 samples/elixir_sample/doc/
+llvm-mingw-20260210-ucrt-ubuntu-22.04-x86_64/

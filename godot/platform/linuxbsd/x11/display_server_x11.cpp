@@ -43,8 +43,8 @@
 #include "drivers/png/png_driver_common.h"
 #include "main/main.h"
 
-#include "servers/rendering/dummy/rasterizer_dummy.h"
 #include "rendering_native_surface_x11.h"
+#include "servers/rendering/dummy/rasterizer_dummy.h"
 
 #if defined(VULKAN_ENABLED)
 #include "servers/rendering/renderer_rd/renderer_compositor_rd.h"

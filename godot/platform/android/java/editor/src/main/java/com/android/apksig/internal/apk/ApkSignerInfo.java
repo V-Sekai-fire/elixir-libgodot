@@ -26,79 +26,79 @@ import java.util.List;
  * Base implementation of an APK signer.
  */
 public class ApkSignerInfo {
-    public int index;
-    public long timestamp;
-    public List<X509Certificate> certs = new ArrayList<>();
-    public List<X509Certificate> certificateLineage = new ArrayList<>();
+	public int index;
+	public long timestamp;
+	public List<X509Certificate> certs = new ArrayList<>();
+	public List<X509Certificate> certificateLineage = new ArrayList<>();
 
-    private final List<ApkVerificationIssue> mInfoMessages = new ArrayList<>();
-    private final List<ApkVerificationIssue> mWarnings = new ArrayList<>();
-    private final List<ApkVerificationIssue> mErrors = new ArrayList<>();
+	private final List<ApkVerificationIssue> mInfoMessages = new ArrayList<>();
+	private final List<ApkVerificationIssue> mWarnings = new ArrayList<>();
+	private final List<ApkVerificationIssue> mErrors = new ArrayList<>();
 
-    /**
-     * Adds a new {@link ApkVerificationIssue} as an error to this signer using the provided {@code
-     * issueId} and {@code params}.
-     */
-    public void addError(int issueId, Object... params) {
-        mErrors.add(new ApkVerificationIssue(issueId, params));
-    }
+	/**
+	 * Adds a new {@link ApkVerificationIssue} as an error to this signer using the provided {@code
+	 * issueId} and {@code params}.
+	 */
+	public void addError(int issueId, Object... params) {
+		mErrors.add(new ApkVerificationIssue(issueId, params));
+	}
 
-    /**
-     * Adds a new {@link ApkVerificationIssue} as a warning to this signer using the provided {@code
-     * issueId} and {@code params}.
-     */
-    public void addWarning(int issueId, Object... params) {
-        mWarnings.add(new ApkVerificationIssue(issueId, params));
-    }
+	/**
+	 * Adds a new {@link ApkVerificationIssue} as a warning to this signer using the provided {@code
+	 * issueId} and {@code params}.
+	 */
+	public void addWarning(int issueId, Object... params) {
+		mWarnings.add(new ApkVerificationIssue(issueId, params));
+	}
 
-    /**
-     * Adds a new {@link ApkVerificationIssue} as an info message to this signer config using the
-     * provided {@code issueId} and {@code params}.
-     */
-    public void addInfoMessage(int issueId, Object... params) {
-        mInfoMessages.add(new ApkVerificationIssue(issueId, params));
-    }
+	/**
+	 * Adds a new {@link ApkVerificationIssue} as an info message to this signer config using the
+	 * provided {@code issueId} and {@code params}.
+	 */
+	public void addInfoMessage(int issueId, Object... params) {
+		mInfoMessages.add(new ApkVerificationIssue(issueId, params));
+	}
 
-    /**
-     * Returns {@code true} if any errors were encountered during verification for this signer.
-     */
-    public boolean containsErrors() {
-        return !mErrors.isEmpty();
-    }
+	/**
+	 * Returns {@code true} if any errors were encountered during verification for this signer.
+	 */
+	public boolean containsErrors() {
+		return !mErrors.isEmpty();
+	}
 
-    /**
-     * Returns {@code true} if any warnings were encountered during verification for this signer.
-     */
-    public boolean containsWarnings() {
-        return !mWarnings.isEmpty();
-    }
+	/**
+	 * Returns {@code true} if any warnings were encountered during verification for this signer.
+	 */
+	public boolean containsWarnings() {
+		return !mWarnings.isEmpty();
+	}
 
-    /**
-     * Returns {@code true} if any info messages were encountered during verification of this
-     * signer.
-     */
-    public boolean containsInfoMessages() {
-        return !mInfoMessages.isEmpty();
-    }
+	/**
+	 * Returns {@code true} if any info messages were encountered during verification of this
+	 * signer.
+	 */
+	public boolean containsInfoMessages() {
+		return !mInfoMessages.isEmpty();
+	}
 
-    /**
-     * Returns the errors encountered during verification for this signer.
-     */
-    public List<? extends ApkVerificationIssue> getErrors() {
-        return mErrors;
-    }
+	/**
+	 * Returns the errors encountered during verification for this signer.
+	 */
+	public List<? extends ApkVerificationIssue> getErrors() {
+		return mErrors;
+	}
 
-    /**
-     * Returns the warnings encountered during verification for this signer.
-     */
-    public List<? extends ApkVerificationIssue> getWarnings() {
-        return mWarnings;
-    }
+	/**
+	 * Returns the warnings encountered during verification for this signer.
+	 */
+	public List<? extends ApkVerificationIssue> getWarnings() {
+		return mWarnings;
+	}
 
-    /**
-     * Returns the info messages encountered during verification of this signer.
-     */
-    public List<? extends ApkVerificationIssue> getInfoMessages() {
-        return mInfoMessages;
-    }
+	/**
+	 * Returns the info messages encountered during verification of this signer.
+	 */
+	public List<? extends ApkVerificationIssue> getInfoMessages() {
+		return mInfoMessages;
+	}
 }

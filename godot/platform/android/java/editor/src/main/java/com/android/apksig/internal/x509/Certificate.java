@@ -43,63 +43,62 @@ import javax.security.auth.x500.X500Principal;
  */
 @Asn1Class(type = Asn1Type.SEQUENCE)
 public class Certificate {
-    @Asn1Field(index = 0, type = Asn1Type.SEQUENCE)
-    public TBSCertificate certificate;
+	@Asn1Field(index = 0, type = Asn1Type.SEQUENCE)
+	public TBSCertificate certificate;
 
-    @Asn1Field(index = 1, type = Asn1Type.SEQUENCE)
-    public AlgorithmIdentifier signatureAlgorithm;
+	@Asn1Field(index = 1, type = Asn1Type.SEQUENCE)
+	public AlgorithmIdentifier signatureAlgorithm;
 
-    @Asn1Field(index = 2, type = Asn1Type.BIT_STRING)
-    public ByteBuffer signature;
+	@Asn1Field(index = 2, type = Asn1Type.BIT_STRING)
+	public ByteBuffer signature;
 
-    public static X509Certificate findCertificate(
-            Collection<X509Certificate> certs, SignerIdentifier id) {
-        for (X509Certificate cert : certs) {
-            if (isMatchingCerticicate(cert, id)) {
-                return cert;
-            }
-        }
-        return null;
-    }
+	public static X509Certificate findCertificate(
+			Collection<X509Certificate> certs, SignerIdentifier id) {
+		for (X509Certificate cert : certs) {
+			if (isMatchingCerticicate(cert, id)) {
+				return cert;
+			}
+		}
+		return null;
+	}
 
-    private static boolean isMatchingCerticicate(X509Certificate cert, SignerIdentifier id) {
-        if (id.issuerAndSerialNumber == null) {
-            // Android doesn't support any other means of identifying the signing certificate
-            return false;
-        }
-        IssuerAndSerialNumber issuerAndSerialNumber = id.issuerAndSerialNumber;
-        byte[] encodedIssuer =
-                ByteBufferUtils.toByteArray(issuerAndSerialNumber.issuer.getEncoded());
-        X500Principal idIssuer = new X500Principal(encodedIssuer);
-        BigInteger idSerialNumber = issuerAndSerialNumber.certificateSerialNumber;
-        return idSerialNumber.equals(cert.getSerialNumber())
-                && idIssuer.equals(cert.getIssuerX500Principal());
-    }
+	private static boolean isMatchingCerticicate(X509Certificate cert, SignerIdentifier id) {
+		if (id.issuerAndSerialNumber == null) {
+			// Android doesn't support any other means of identifying the signing certificate
+			return false;
+		}
+		IssuerAndSerialNumber issuerAndSerialNumber = id.issuerAndSerialNumber;
+		byte[] encodedIssuer =
+				ByteBufferUtils.toByteArray(issuerAndSerialNumber.issuer.getEncoded());
+		X500Principal idIssuer = new X500Principal(encodedIssuer);
+		BigInteger idSerialNumber = issuerAndSerialNumber.certificateSerialNumber;
+		return idSerialNumber.equals(cert.getSerialNumber()) && idIssuer.equals(cert.getIssuerX500Principal());
+	}
 
-    public static List<X509Certificate> parseCertificates(
-            List<Asn1OpaqueObject> encodedCertificates) throws CertificateException {
-        if (encodedCertificates.isEmpty()) {
-            return Collections.emptyList();
-        }
+	public static List<X509Certificate> parseCertificates(
+			List<Asn1OpaqueObject> encodedCertificates) throws CertificateException {
+		if (encodedCertificates.isEmpty()) {
+			return Collections.emptyList();
+		}
 
-        List<X509Certificate> result = new ArrayList<>(encodedCertificates.size());
-        for (int i = 0; i < encodedCertificates.size(); i++) {
-            Asn1OpaqueObject encodedCertificate = encodedCertificates.get(i);
-            X509Certificate certificate;
-            byte[] encodedForm = ByteBufferUtils.toByteArray(encodedCertificate.getEncoded());
-            try {
-                certificate = X509CertificateUtils.generateCertificate(encodedForm);
-            } catch (CertificateException e) {
-                throw new CertificateException("Failed to parse certificate #" + (i + 1), e);
-            }
-            // Wrap the cert so that the result's getEncoded returns exactly the original
-            // encoded form. Without this, getEncoded may return a different form from what was
-            // stored in the signature. This is because some X509Certificate(Factory)
-            // implementations re-encode certificates and/or some implementations of
-            // X509Certificate.getEncoded() re-encode certificates.
-            certificate = new GuaranteedEncodedFormX509Certificate(certificate, encodedForm);
-            result.add(certificate);
-        }
-        return result;
-    }
+		List<X509Certificate> result = new ArrayList<>(encodedCertificates.size());
+		for (int i = 0; i < encodedCertificates.size(); i++) {
+			Asn1OpaqueObject encodedCertificate = encodedCertificates.get(i);
+			X509Certificate certificate;
+			byte[] encodedForm = ByteBufferUtils.toByteArray(encodedCertificate.getEncoded());
+			try {
+				certificate = X509CertificateUtils.generateCertificate(encodedForm);
+			} catch (CertificateException e) {
+				throw new CertificateException("Failed to parse certificate #" + (i + 1), e);
+			}
+			// Wrap the cert so that the result's getEncoded returns exactly the original
+			// encoded form. Without this, getEncoded may return a different form from what was
+			// stored in the signature. This is because some X509Certificate(Factory)
+			// implementations re-encode certificates and/or some implementations of
+			// X509Certificate.getEncoded() re-encode certificates.
+			certificate = new GuaranteedEncodedFormX509Certificate(certificate, encodedForm);
+			result.add(certificate);
+		}
+		return result;
+	}
 }

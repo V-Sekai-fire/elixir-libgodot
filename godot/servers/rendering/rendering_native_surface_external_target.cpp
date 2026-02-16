@@ -74,10 +74,10 @@ public:
 	virtual void set_use_vsync(bool p_use) override {}
 	virtual bool is_using_vsync() const override { return false; }
 
-	GLManagerExternal() {};
+	GLManagerExternal() {}
 	~GLManagerExternal() {
 		deinitialize();
-	};
+	}
 
 private:
 	Ref<RenderingNativeSurfaceExternalTarget> surface;
@@ -87,7 +87,7 @@ private:
 	DisplayServer::WindowID current_window = -1;
 #if defined(GLES3_ENABLED)
 	Callable make_current;
-    Callable done_current;
+	Callable done_current;
 #ifdef GLAD_ENABLED
 	GLADloadfunc get_proc_address = nullptr;
 #endif
@@ -127,7 +127,7 @@ Error GLManagerExternal::window_create(DisplayServer::WindowID p_id, Ref<Renderi
 	}
 
 #if defined(GLES3_ENABLED)
-	WindowData& gles_data = windows[p_id];
+	WindowData &gles_data = windows[p_id];
 	gles_data.backingWidth = surface->get_width();
 	gles_data.backingHeight = surface->get_height();
 
@@ -136,7 +136,7 @@ Error GLManagerExternal::window_create(DisplayServer::WindowID p_id, Ref<Renderi
 	// Generate Framebuffer.
 	glGenFramebuffers(1, &gles_data.viewFramebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gles_data.viewFramebuffer);
-	
+
 	// Bind color texture.
 	glGenTextures(1, &gles_data.colorTexture);
 	glBindTexture(GL_TEXTURE_2D, gles_data.colorTexture);
@@ -165,7 +165,7 @@ Error GLManagerExternal::window_create(DisplayServer::WindowID p_id, Ref<Renderi
 
 void GLManagerExternal::window_resize(DisplayServer::WindowID p_id, int p_width, int p_height) {
 	ERR_FAIL_COND(!windows.has(p_id));
-	WindowData& gles_data = windows[p_id];
+	WindowData &gles_data = windows[p_id];
 #if defined(GLES3_ENABLED)
 	make_current.call();
 	window_destroy(p_id);
@@ -176,7 +176,7 @@ void GLManagerExternal::window_resize(DisplayServer::WindowID p_id, int p_width,
 
 void GLManagerExternal::window_make_current(DisplayServer::WindowID p_id) {
 	ERR_FAIL_COND(!windows.has(p_id));
-	WindowData& gles_data = windows[p_id];
+	WindowData &gles_data = windows[p_id];
 #if defined(GLES3_ENABLED)
 	make_current.call();
 	glBindFramebuffer(GL_FRAMEBUFFER, gles_data.viewFramebuffer);
@@ -199,7 +199,7 @@ void GLManagerExternal::swap_buffers() {
 
 void GLManagerExternal::window_destroy(DisplayServer::WindowID p_id) {
 	ERR_FAIL_COND(!windows.has(p_id));
-	WindowData& gles_data = windows[p_id];
+	WindowData &gles_data = windows[p_id];
 #if defined(GLES3_ENABLED)
 	make_current.call();
 
@@ -229,7 +229,7 @@ void GLManagerExternal::deinitialize() {
 
 int GLManagerExternal::window_get_render_target(DisplayServer::WindowID p_id) const {
 	ERR_FAIL_COND_V(!windows.has(p_id), 0);
-	const WindowData& gles_data = windows[p_id];
+	const WindowData &gles_data = windows[p_id];
 #if defined(GLES3_ENABLED)
 	return gles_data.viewFramebuffer;
 #else
@@ -239,7 +239,7 @@ int GLManagerExternal::window_get_render_target(DisplayServer::WindowID p_id) co
 
 int GLManagerExternal::window_get_color_texture(DisplayServer::WindowID p_id) const {
 	ERR_FAIL_COND_V(!windows.has(p_id), -1);
-	const WindowData& gles_data = windows[p_id];
+	const WindowData &gles_data = windows[p_id];
 #if defined(GLES3_ENABLED)
 	return gles_data.colorTexture;
 #else
@@ -253,7 +253,7 @@ void RenderingNativeSurfaceExternalTarget::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_window"), &RenderingNativeSurfaceExternalTarget::get_window);
 
 	ClassDB::bind_static_method("RenderingNativeSurfaceExternalTarget", D_METHOD("create", "rendering_driver", "initial_size"), &RenderingNativeSurfaceExternalTarget::create_api);
-	
+
 	ClassDB::bind_method(D_METHOD("set_external_swapchain_callbacks", "images_created", "images_released"), &RenderingNativeSurfaceExternalTarget::set_external_swapchain_callbacks);
 	ClassDB::bind_method(D_METHOD("resize", "new_size"), &RenderingNativeSurfaceExternalTarget::resize);
 	ClassDB::bind_method(D_METHOD("acquire_next_image"), &RenderingNativeSurfaceExternalTarget::acquire_next_image);
@@ -323,7 +323,7 @@ RenderingContextDriver::SurfaceID RenderingNativeSurfaceExternalTarget::get_surf
 }
 
 Ref<RenderingNativeSurfaceExternalTarget> RenderingNativeSurfaceExternalTarget::create_api(String p_rendering_driver, Size2i p_initial_size) {
-    Ref<RenderingNativeSurfaceExternalTarget> result = nullptr;
+	Ref<RenderingNativeSurfaceExternalTarget> result = nullptr;
 #ifdef VULKAN_ENABLED
 	result = create(p_rendering_driver, p_initial_size);
 #endif
@@ -332,7 +332,7 @@ Ref<RenderingNativeSurfaceExternalTarget> RenderingNativeSurfaceExternalTarget::
 
 #ifdef VULKAN_ENABLED
 Ref<RenderingNativeSurfaceExternalTarget> RenderingNativeSurfaceExternalTarget::create(String p_rendering_driver, Size2i p_initial_size) {
-    Ref<RenderingNativeSurfaceExternalTarget> result(memnew(RenderingNativeSurfaceExternalTarget(p_rendering_driver, p_initial_size.width, p_initial_size.height)));
+	Ref<RenderingNativeSurfaceExternalTarget> result(memnew(RenderingNativeSurfaceExternalTarget(p_rendering_driver, p_initial_size.width, p_initial_size.height)));
 	return result;
 }
 #endif
@@ -358,7 +358,7 @@ void RenderingNativeSurfaceExternalTarget::setup_external_swapchain_callbacks() 
 
 void RenderingNativeSurfaceExternalTarget::set_external_swapchain_callbacks(Callable p_images_created, Callable p_images_released) {
 	// NOTE: p_images_created: host wraps godot's swapchain images into qsgvulkantextures usable by the host
-    // NOTE: p_images_released: host frees all it's qsgvulkantextures
+	// NOTE: p_images_released: host frees all it's qsgvulkantextures
 
 	post_images_created_callback = p_images_created;
 	pre_images_released_callback = p_images_released;

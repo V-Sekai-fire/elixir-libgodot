@@ -28,7 +28,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-
 #ifndef DISABLE_DEPRECATED
 
 namespace godot {
@@ -42,7 +41,7 @@ constexpr T ABS(T m_v) {
 	return m_v < 0 ? -m_v : m_v;
 }
 
-}
+} //namespace godot
 
 // To maintain compatibility an alias is defined outside the namespace.
 // Consider it deprecated.

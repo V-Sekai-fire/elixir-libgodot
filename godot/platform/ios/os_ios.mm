@@ -33,9 +33,9 @@
 #import "display_server_ios.h"
 #include "servers/display_server_embedded.h"
 
-#include <sys/types.h>
-#include <sys/sysctl.h>
 #include <mach/machine.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 
 #ifdef IOS_ENABLED
 
@@ -61,7 +61,7 @@ String OS_IOS::get_name() const {
 
 String OS_IOS::get_processor_name() const {
 	NSMutableString *ns_cpu = [[NSMutableString alloc] init];
-    size_t size;
+	size_t size;
 	cpu_type_t type;
 	cpu_subtype_t subtype;
 	size = sizeof(type);
@@ -77,8 +77,7 @@ String OS_IOS::get_processor_name() const {
 		[ns_cpu appendString:@"x86"];
 	} else if (type == CPU_TYPE_ARM) {
 		[ns_cpu appendString:@"ARM"];
-		switch(subtype)
-		{
+		switch (subtype) {
 			case CPU_SUBTYPE_ARM_V6:
 				[ns_cpu appendString:@"V6"];
 				break;

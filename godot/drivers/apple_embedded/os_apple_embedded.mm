@@ -208,7 +208,7 @@ void OS_AppleEmbedded::delete_main_loop() {
 bool OS_AppleEmbedded::iterate() {
 	GodotProfileFrameMark;
 	GodotProfileZone("OS_IOS::iterate");
-	
+
 	if (!main_loop) {
 		return true;
 	}

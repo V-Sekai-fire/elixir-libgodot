@@ -115,7 +115,12 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile $output
           Expand-Archive -Path $output -DestinationPath $env:TEMP\mingw
           $mingwPath = "$env:TEMP\mingw\llvm-mingw-20251216-ucrt-x86_64\bin"
-          echo "MINGW_PREFIX=$env:TEMP\mingw\llvm-mingw-20251216-ucrt-x86_64" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $mingwPrefix = "$env:TEMP\mingw\llvm-mingw-20251216-ucrt-x86_64"
+          echo "MINGW_PREFIX=$mingwPrefix" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "CC=$mingwPath\clang.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "CXX=$mingwPath\clang++.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "AR=$mingwPath\llvm-ar.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "RANLIB=$mingwPath\llvm-ranlib.exe" | Out-File -FilePath $env:GITHUB_ENV -Append
           $env:PATH = "$mingwPath;$env:PATH"
           echo "PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
 

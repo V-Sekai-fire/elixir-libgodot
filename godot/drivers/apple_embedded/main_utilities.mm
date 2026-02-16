@@ -89,7 +89,7 @@ int add_cmdline(int p_argc, char **p_args) {
 
 int process_args(int p_argc, char **p_args, char **r_args) {
 	godot_init_profiler();
-	
+
 	for (int i = 0; i < p_argc; i++) {
 		r_args[i] = p_args[i];
 	}

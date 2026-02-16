@@ -21,7 +21,7 @@ package com.android.apksig.internal.apk;
  * requested platform versions.
  */
 public class NoApkSupportedSignaturesException extends Exception {
-    public NoApkSupportedSignaturesException(String message) {
-        super(message);
-    }
+	public NoApkSupportedSignaturesException(String message) {
+		super(message);
+	}
 }

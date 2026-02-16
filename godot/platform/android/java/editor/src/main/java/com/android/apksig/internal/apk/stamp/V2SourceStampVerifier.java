@@ -51,109 +51,110 @@ import java.util.Map;
  * <p>V2 of the source stamp verifies the stamp signature of more than one signature schemes.
  */
 public abstract class V2SourceStampVerifier {
+	/**
+	 * Hidden constructor to prevent instantiation.
+	 */
+	private V2SourceStampVerifier() {}
 
-    /** Hidden constructor to prevent instantiation. */
-    private V2SourceStampVerifier() {}
+	/**
+	 * Verifies the provided APK's SourceStamp signatures and returns the result of verification.
+	 * The APK must be considered verified only if {@link ApkSigResult#verified} is
+	 * {@code true}. If verification fails, the result will contain errors -- see {@link
+	 * ApkSigResult#getErrors()}.
+	 *
+	 * @throws NoSuchAlgorithmException if the APK's signatures cannot be verified because a
+	 *     required cryptographic algorithm implementation is missing
+	 * @throws SignatureNotFoundException if no SourceStamp signatures are
+	 *     found
+	 * @throws IOException if an I/O error occurs when reading the APK
+	 */
+	public static ApkSigResult verify(
+			DataSource apk,
+			ZipSections zipSections,
+			byte[] sourceStampCertificateDigest,
+			Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests,
+			int minSdkVersion,
+			int maxSdkVersion)
+			throws IOException, NoSuchAlgorithmException, SignatureNotFoundException {
+		ApkSigResult result =
+				new ApkSigResult(Constants.VERSION_SOURCE_STAMP);
+		SignatureInfo signatureInfo =
+				ApkSigningBlockUtilsLite.findSignature(
+						apk, zipSections, V2_SOURCE_STAMP_BLOCK_ID);
 
-    /**
-     * Verifies the provided APK's SourceStamp signatures and returns the result of verification.
-     * The APK must be considered verified only if {@link ApkSigResult#verified} is
-     * {@code true}. If verification fails, the result will contain errors -- see {@link
-     * ApkSigResult#getErrors()}.
-     *
-     * @throws NoSuchAlgorithmException if the APK's signatures cannot be verified because a
-     *     required cryptographic algorithm implementation is missing
-     * @throws SignatureNotFoundException if no SourceStamp signatures are
-     *     found
-     * @throws IOException if an I/O error occurs when reading the APK
-     */
-    public static ApkSigResult verify(
-            DataSource apk,
-            ZipSections zipSections,
-            byte[] sourceStampCertificateDigest,
-            Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests,
-            int minSdkVersion,
-            int maxSdkVersion)
-            throws IOException, NoSuchAlgorithmException, SignatureNotFoundException {
-        ApkSigResult result =
-                new ApkSigResult(Constants.VERSION_SOURCE_STAMP);
-        SignatureInfo signatureInfo =
-                ApkSigningBlockUtilsLite.findSignature(
-                        apk, zipSections, V2_SOURCE_STAMP_BLOCK_ID);
+		verify(
+				signatureInfo.signatureBlock,
+				sourceStampCertificateDigest,
+				signatureSchemeApkContentDigests,
+				minSdkVersion,
+				maxSdkVersion,
+				result);
+		return result;
+	}
 
-        verify(
-                signatureInfo.signatureBlock,
-                sourceStampCertificateDigest,
-                signatureSchemeApkContentDigests,
-                minSdkVersion,
-                maxSdkVersion,
-                result);
-        return result;
-    }
+	/**
+	 * Verifies the provided APK's SourceStamp signatures and outputs the results into the provided
+	 * {@code result}. APK is considered verified only if there are no errors reported in the {@code
+	 * result}. See {@link #verify(DataSource, ZipSections, byte[], Map, int, int)} for
+	 * more information about the contract of this method.
+	 */
+	private static void verify(
+			ByteBuffer sourceStampBlock,
+			byte[] sourceStampCertificateDigest,
+			Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests,
+			int minSdkVersion,
+			int maxSdkVersion,
+			ApkSigResult result)
+			throws NoSuchAlgorithmException {
+		ApkSignerInfo signerInfo = new ApkSignerInfo();
+		result.mSigners.add(signerInfo);
+		try {
+			CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+			ByteBuffer sourceStampBlockData =
+					ApkSigningBlockUtilsLite.getLengthPrefixedSlice(sourceStampBlock);
+			SourceStampVerifier.verifyV2SourceStamp(
+					sourceStampBlockData,
+					certFactory,
+					signerInfo,
+					getSignatureSchemeDigests(signatureSchemeApkContentDigests),
+					sourceStampCertificateDigest,
+					minSdkVersion,
+					maxSdkVersion);
+			result.verified = !result.containsErrors() && !result.containsWarnings();
+		} catch (CertificateException e) {
+			throw new IllegalStateException("Failed to obtain X.509 CertificateFactory", e);
+		} catch (ApkFormatException | BufferUnderflowException e) {
+			signerInfo.addWarning(ApkVerificationIssue.SOURCE_STAMP_MALFORMED_SIGNATURE);
+		}
+	}
 
-    /**
-     * Verifies the provided APK's SourceStamp signatures and outputs the results into the provided
-     * {@code result}. APK is considered verified only if there are no errors reported in the {@code
-     * result}. See {@link #verify(DataSource, ZipSections, byte[], Map, int, int)} for
-     * more information about the contract of this method.
-     */
-    private static void verify(
-            ByteBuffer sourceStampBlock,
-            byte[] sourceStampCertificateDigest,
-            Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests,
-            int minSdkVersion,
-            int maxSdkVersion,
-            ApkSigResult result)
-            throws NoSuchAlgorithmException {
-        ApkSignerInfo signerInfo = new ApkSignerInfo();
-        result.mSigners.add(signerInfo);
-        try {
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            ByteBuffer sourceStampBlockData =
-                    ApkSigningBlockUtilsLite.getLengthPrefixedSlice(sourceStampBlock);
-            SourceStampVerifier.verifyV2SourceStamp(
-                    sourceStampBlockData,
-                    certFactory,
-                    signerInfo,
-                    getSignatureSchemeDigests(signatureSchemeApkContentDigests),
-                    sourceStampCertificateDigest,
-                    minSdkVersion,
-                    maxSdkVersion);
-            result.verified = !result.containsErrors() && !result.containsWarnings();
-        } catch (CertificateException e) {
-            throw new IllegalStateException("Failed to obtain X.509 CertificateFactory", e);
-        } catch (ApkFormatException | BufferUnderflowException e) {
-            signerInfo.addWarning(ApkVerificationIssue.SOURCE_STAMP_MALFORMED_SIGNATURE);
-        }
-    }
+	private static Map<Integer, byte[]> getSignatureSchemeDigests(
+			Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests) {
+		Map<Integer, byte[]> digests = new HashMap<>();
+		for (Map.Entry<Integer, Map<ContentDigestAlgorithm, byte[]>>
+						signatureSchemeApkContentDigest : signatureSchemeApkContentDigests.entrySet()) {
+			List<Pair<Integer, byte[]>> apkDigests =
+					getApkDigests(signatureSchemeApkContentDigest.getValue());
+			digests.put(
+					signatureSchemeApkContentDigest.getKey(),
+					encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(apkDigests));
+		}
+		return digests;
+	}
 
-    private static Map<Integer, byte[]> getSignatureSchemeDigests(
-            Map<Integer, Map<ContentDigestAlgorithm, byte[]>> signatureSchemeApkContentDigests) {
-        Map<Integer, byte[]> digests = new HashMap<>();
-        for (Map.Entry<Integer, Map<ContentDigestAlgorithm, byte[]>>
-                signatureSchemeApkContentDigest : signatureSchemeApkContentDigests.entrySet()) {
-            List<Pair<Integer, byte[]>> apkDigests =
-                    getApkDigests(signatureSchemeApkContentDigest.getValue());
-            digests.put(
-                    signatureSchemeApkContentDigest.getKey(),
-                    encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(apkDigests));
-        }
-        return digests;
-    }
-
-    private static List<Pair<Integer, byte[]>> getApkDigests(
-            Map<ContentDigestAlgorithm, byte[]> apkContentDigests) {
-        List<Pair<Integer, byte[]>> digests = new ArrayList<>();
-        for (Map.Entry<ContentDigestAlgorithm, byte[]> apkContentDigest :
-                apkContentDigests.entrySet()) {
-            digests.add(Pair.of(apkContentDigest.getKey().getId(), apkContentDigest.getValue()));
-        }
-        Collections.sort(digests, new Comparator<Pair<Integer, byte[]>>() {
-            @Override
-            public int compare(Pair<Integer, byte[]> pair1, Pair<Integer, byte[]> pair2) {
-                return pair1.getFirst() - pair2.getFirst();
-            }
-        });
-        return digests;
-    }
+	private static List<Pair<Integer, byte[]>> getApkDigests(
+			Map<ContentDigestAlgorithm, byte[]> apkContentDigests) {
+		List<Pair<Integer, byte[]>> digests = new ArrayList<>();
+		for (Map.Entry<ContentDigestAlgorithm, byte[]> apkContentDigest :
+				apkContentDigests.entrySet()) {
+			digests.add(Pair.of(apkContentDigest.getKey().getId(), apkContentDigest.getValue()));
+		}
+		Collections.sort(digests, new Comparator<Pair<Integer, byte[]>>() {
+			@Override
+			public int compare(Pair<Integer, byte[]> pair1, Pair<Integer, byte[]> pair2) {
+				return pair1.getFirst() - pair2.getFirst();
+			}
+		});
+		return digests;
+	}
 }

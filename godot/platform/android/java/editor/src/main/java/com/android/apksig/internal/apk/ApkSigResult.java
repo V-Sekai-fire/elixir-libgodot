@@ -25,80 +25,82 @@ import java.util.List;
  * Base implementation of an APK signature verification result.
  */
 public class ApkSigResult {
-    public final int signatureSchemeVersion;
+	public final int signatureSchemeVersion;
 
-    /** Whether the APK's Signature Scheme signature verifies. */
-    public boolean verified;
+	/**
+	 * Whether the APK's Signature Scheme signature verifies.
+	 */
+	public boolean verified;
 
-    public final List<ApkSignerInfo> mSigners = new ArrayList<>();
-    private final List<ApkVerificationIssue> mWarnings = new ArrayList<>();
-    private final List<ApkVerificationIssue> mErrors = new ArrayList<>();
+	public final List<ApkSignerInfo> mSigners = new ArrayList<>();
+	private final List<ApkVerificationIssue> mWarnings = new ArrayList<>();
+	private final List<ApkVerificationIssue> mErrors = new ArrayList<>();
 
-    public ApkSigResult(int signatureSchemeVersion) {
-        this.signatureSchemeVersion = signatureSchemeVersion;
-    }
+	public ApkSigResult(int signatureSchemeVersion) {
+		this.signatureSchemeVersion = signatureSchemeVersion;
+	}
 
-    /**
-     * Returns {@code true} if this result encountered errors during verification.
-     */
-    public boolean containsErrors() {
-        if (!mErrors.isEmpty()) {
-            return true;
-        }
-        if (!mSigners.isEmpty()) {
-            for (ApkSignerInfo signer : mSigners) {
-                if (signer.containsErrors()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+	/**
+	 * Returns {@code true} if this result encountered errors during verification.
+	 */
+	public boolean containsErrors() {
+		if (!mErrors.isEmpty()) {
+			return true;
+		}
+		if (!mSigners.isEmpty()) {
+			for (ApkSignerInfo signer : mSigners) {
+				if (signer.containsErrors()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Returns {@code true} if this result encountered warnings during verification.
-     */
-    public boolean containsWarnings() {
-        if (!mWarnings.isEmpty()) {
-            return true;
-        }
-        if (!mSigners.isEmpty()) {
-            for (ApkSignerInfo signer : mSigners) {
-                if (signer.containsWarnings()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+	/**
+	 * Returns {@code true} if this result encountered warnings during verification.
+	 */
+	public boolean containsWarnings() {
+		if (!mWarnings.isEmpty()) {
+			return true;
+		}
+		if (!mSigners.isEmpty()) {
+			for (ApkSignerInfo signer : mSigners) {
+				if (signer.containsWarnings()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
-    /**
-     * Adds a new {@link ApkVerificationIssue} as an error to this result using the provided {@code
-     * issueId} and {@code params}.
-     */
-    public void addError(int issueId, Object... parameters) {
-        mErrors.add(new ApkVerificationIssue(issueId, parameters));
-    }
+	/**
+	 * Adds a new {@link ApkVerificationIssue} as an error to this result using the provided {@code
+	 * issueId} and {@code params}.
+	 */
+	public void addError(int issueId, Object... parameters) {
+		mErrors.add(new ApkVerificationIssue(issueId, parameters));
+	}
 
-    /**
-     * Adds a new {@link ApkVerificationIssue} as a warning to this result using the provided {@code
-     * issueId} and {@code params}.
-     */
-    public void addWarning(int issueId, Object... parameters) {
-        mWarnings.add(new ApkVerificationIssue(issueId, parameters));
-    }
+	/**
+	 * Adds a new {@link ApkVerificationIssue} as a warning to this result using the provided {@code
+	 * issueId} and {@code params}.
+	 */
+	public void addWarning(int issueId, Object... parameters) {
+		mWarnings.add(new ApkVerificationIssue(issueId, parameters));
+	}
 
-    /**
-     * Returns the errors encountered during verification.
-     */
-    public List<? extends ApkVerificationIssue> getErrors() {
-        return mErrors;
-    }
+	/**
+	 * Returns the errors encountered during verification.
+	 */
+	public List<? extends ApkVerificationIssue> getErrors() {
+		return mErrors;
+	}
 
-    /**
-     * Returns the warnings encountered during verification.
-     */
-    public List<? extends ApkVerificationIssue> getWarnings() {
-        return mWarnings;
-    }
+	/**
+	 * Returns the warnings encountered during verification.
+	 */
+	public List<? extends ApkVerificationIssue> getWarnings() {
+		return mWarnings;
+	}
 }

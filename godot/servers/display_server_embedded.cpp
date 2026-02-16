@@ -125,17 +125,17 @@ DisplayServerEmbedded::DisplayServerEmbedded(const String &p_rendering_driver, W
 #if defined(GLES3_ENABLED)
 	if (rendering_driver.contains("opengl3")) {
 		PackedStringArray driver_candidates;
-        bool gldriver_novalidate = false;
-        if (rendering_driver == "opengl3_novalidate") {
-            rendering_driver ="opengl3";
-            gldriver_novalidate = true;
-        }
+		bool gldriver_novalidate = false;
+		if (rendering_driver == "opengl3_novalidate") {
+			rendering_driver = "opengl3";
+			gldriver_novalidate = true;
+		}
 		driver_candidates.push_back(rendering_driver);
-		#ifdef ANGLE_ENABLED
+#ifdef ANGLE_ENABLED
 		if (rendering_driver != "opengl3_angle") {
 			driver_candidates.push_back("opengl3_angle");
 		}
-		#endif
+#endif
 		for (int i = 0; i < driver_candidates.size(); ++i) {
 			String driver_candidate = driver_candidates[i];
 			print_verbose(vformat("Initializing driver: %s", driver_candidate));
@@ -158,21 +158,21 @@ DisplayServerEmbedded::DisplayServerEmbedded(const String &p_rendering_driver, W
 				continue;
 			}
 
-            bool validation_result = gl_manager->validate_driver();
-            if (!validation_result) {
-                print_verbose(vformat("GL driver validation failed: %s", driver_candidate));
-            }
+			bool validation_result = gl_manager->validate_driver();
+			if (!validation_result) {
+				print_verbose(vformat("GL driver validation failed: %s", driver_candidate));
+			}
 			if (gldriver_novalidate || validation_result) {
-                print_verbose(vformat("GL driver accepted: %s", driver_candidate));
+				print_verbose(vformat("GL driver accepted: %s", driver_candidate));
 				rendering_driver = driver_candidate;
 				OS::get_singleton()->set_current_rendering_driver_name(rendering_driver);
-                break;
+				break;
 			}
 
-            gl_manager->window_destroy(MAIN_WINDOW_ID);
-            window_id_counter = MAIN_WINDOW_ID;
-            memdelete(gl_manager);
-            gl_manager = nullptr;
+			gl_manager->window_destroy(MAIN_WINDOW_ID);
+			window_id_counter = MAIN_WINDOW_ID;
+			memdelete(gl_manager);
+			gl_manager = nullptr;
 		}
 
 		if (gl_manager == nullptr) {
@@ -234,7 +234,7 @@ Vector<String> DisplayServerEmbedded::get_rendering_drivers_func() {
 #endif
 #if defined(GLES3_ENABLED)
 	drivers.push_back("opengl3");
-    drivers.push_back("opengl3_novalidate");
+	drivers.push_back("opengl3_novalidate");
 #endif
 #if defined(ANGLE_ENABLED)
 	drivers.push_back("opengl3_angle");
@@ -582,7 +582,7 @@ int64_t DisplayServerEmbedded::window_get_native_handle(HandleType p_handle_type
 		}
 #endif
 		default: {
-			return 0;	// Not supported.
+			return 0; // Not supported.
 		}
 	}
 }

@@ -1258,7 +1258,7 @@ void OS_MacOS_Embedded::run() {
 
 	if (ds && ret == EXIT_SUCCESS && main_loop) {
 		godot_init_profiler();
-		
+
 		@autoreleasepool {
 			main_loop->initialize();
 		}

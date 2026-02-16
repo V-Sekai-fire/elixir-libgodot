@@ -26,23 +26,22 @@ package com.google.android.vending.licensing;
  * obfuscated preferences from being shared among devices.
  */
 public interface Obfuscator {
+	/**
+	 * Obfuscate a string that is being stored into shared preferences.
+	 *
+	 * @param original The data that is to be obfuscated.
+	 * @param key The key for the data that is to be obfuscated.
+	 * @return A transformed version of the original data.
+	 */
+	String obfuscate(String original, String key);
 
-    /**
-     * Obfuscate a string that is being stored into shared preferences.
-     *
-     * @param original The data that is to be obfuscated.
-     * @param key The key for the data that is to be obfuscated.
-     * @return A transformed version of the original data.
-     */
-    String obfuscate(String original, String key);
-
-    /**
-     * Undo the transformation applied to data by the obfuscate() method.
-     *
-     * @param obfuscated The data that is to be un-obfuscated.
-     * @param key The key for the data that is to be un-obfuscated.
-     * @return The original data transformed by the obfuscate() method.
-     * @throws ValidationException Optionally thrown if a data integrity check fails.
-     */
-    String unobfuscate(String obfuscated, String key) throws ValidationException;
+	/**
+	 * Undo the transformation applied to data by the obfuscate() method.
+	 *
+	 * @param obfuscated The data that is to be un-obfuscated.
+	 * @param key The key for the data that is to be un-obfuscated.
+	 * @return The original data transformed by the obfuscate() method.
+	 * @throws ValidationException Optionally thrown if a data integrity check fails.
+	 */
+	String unobfuscate(String obfuscated, String key) throws ValidationException;
 }

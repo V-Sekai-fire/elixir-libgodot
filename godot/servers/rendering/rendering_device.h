@@ -1624,7 +1624,7 @@ private:
 		virtual ~Frames() = default;
 	};
 
-	class DefaultFrames: public Frames {
+	class DefaultFrames : public Frames {
 	public:
 		virtual void resize(uint32_t p_size) override final {
 			frames.resize(p_size);
@@ -1639,7 +1639,8 @@ private:
 
 		virtual void initialize() override final {}
 
-		DefaultFrames(RenderingDeviceDriver *p_driver): Frames(p_driver) {}
+		DefaultFrames(RenderingDeviceDriver *p_driver) :
+				Frames(p_driver) {}
 	};
 
 #ifdef EXTERNAL_TARGET_ENABLED
@@ -1658,7 +1659,7 @@ private:
 		bool frame_completed = true;
 	};
 
-	class MonitoredFrames: public Frames {
+	class MonitoredFrames : public Frames {
 		Thread monitor_thread;
 		TightLocalVector<FenceData> fence_data;
 		RenderingDevice *context;
@@ -1673,7 +1674,7 @@ private:
 					MutexLock lock(p_context->fence_data[frame_to_wait].fence_mutex);
 					while (!p_context->fence_data[frame_to_wait].fence_set) {
 						p_context->fence_data[frame_to_wait].fence_set_cond.wait(lock);
-						
+
 						if (stop) {
 							return;
 						}
@@ -1751,7 +1752,7 @@ private:
 			if (p_frame_completed) {
 				for (KeyValue<DisplayServer::WindowID, RDD::SwapChainID> &E : context->screen_swap_chains) {
 					const DisplayServer::WindowID &id = E.key;
-					const RDD::SwapChainID& swapchain_id = E.value;
+					const RDD::SwapChainID &swapchain_id = E.value;
 
 					MutexLock external_lock(*driver->swap_chain_get_mutex(swapchain_id));
 
@@ -1779,11 +1780,13 @@ private:
 		virtual void initialize() override final {
 			monitor_thread.start([](void *p_user) {
 				MonitoredFrames::_monitor((MonitoredFrames *)p_user);
-			}, this);
+			},
+					this);
 		}
 
 		MonitoredFrames() {}
-		MonitoredFrames(RenderingDeviceDriver *p_driver, RenderingDevice *p_context): Frames(p_driver) {
+		MonitoredFrames(RenderingDeviceDriver *p_driver, RenderingDevice *p_context) :
+				Frames(p_driver) {
 			context = p_context;
 		}
 

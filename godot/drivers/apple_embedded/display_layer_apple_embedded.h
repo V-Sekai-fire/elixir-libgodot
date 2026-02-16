@@ -30,8 +30,8 @@
 
 #pragma once
 
-#import <QuartzCore/CAMetalLayer.h>
 #include "servers/rendering/gl_manager.h"
+#import <QuartzCore/CAMetalLayer.h>
 
 @protocol GDTDisplayLayer <NSObject>
 

@@ -24,18 +24,18 @@ import java.io.InputStream;
  * Utilities for byte arrays and I/O streams.
  */
 public final class ByteStreams {
-    private ByteStreams() {}
+	private ByteStreams() {}
 
-    /**
-     * Returns the data remaining in the provided input stream as a byte array
-     */
-    public static byte[] toByteArray(InputStream in) throws IOException {
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buf = new byte[16384];
-        int chunkSize;
-        while ((chunkSize = in.read(buf)) != -1) {
-            result.write(buf, 0, chunkSize);
-        }
-        return result.toByteArray();
-    }
+	/**
+	 * Returns the data remaining in the provided input stream as a byte array
+	 */
+	public static byte[] toByteArray(InputStream in) throws IOException {
+		ByteArrayOutputStream result = new ByteArrayOutputStream();
+		byte[] buf = new byte[16384];
+		int chunkSize;
+		while ((chunkSize = in.read(buf)) != -1) {
+			result.write(buf, 0, chunkSize);
+		}
+		return result.toByteArray();
+	}
 }

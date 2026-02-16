@@ -21,8 +21,7 @@ executable_files = [
     "view_controller.mm",
 ]
 
-libgodot_files = [
-]
+libgodot_files = []
 
 env_apple_embedded = env.Clone()
 

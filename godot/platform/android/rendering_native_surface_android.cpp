@@ -38,20 +38,27 @@
 #endif
 
 #if defined(GLES3_ENABLED)
-#include <vector>
+#include "drivers/egl/gl_manager_embedded_angle.h"
 #include "servers/rendering/gl_manager.h"
 #include "servers/rendering_server.h"
-#include "drivers/egl/gl_manager_embedded_angle.h"
-#include <android/native_window.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
+#include <android/native_window.h>
 #include <dlfcn.h>
+#include <vector>
 
-#define GL_ERR(expr) { expr; GLenum err = glGetError(); if (err) { print_line(vformat("%s:%s: %x error", __FUNCTION__, #expr, err)); } }
+#define GL_ERR(expr)                                                          \
+	{                                                                         \
+		expr;                                                                 \
+		GLenum err = glGetError();                                            \
+		if (err) {                                                            \
+			print_line(vformat("%s:%s: %x error", __FUNCTION__, #expr, err)); \
+		}                                                                     \
+	}
 
 #ifndef EGL_KHR_platform_android
 #define EGL_KHR_platform_android 1
-#define EGL_PLATFORM_ANDROID_KHR          0x3141
+#define EGL_PLATFORM_ANDROID_KHR 0x3141
 #endif /* EGL_KHR_platform_android */
 
 struct WindowData {
@@ -105,8 +112,6 @@ Vector<EGLint> GLManagerAndroid::_get_platform_context_attribs() const {
 
 #endif // GLES3_ENABLED
 
-
-
 void RenderingNativeSurfaceAndroid::_bind_methods() {
 	ClassDB::bind_static_method("RenderingNativeSurfaceAndroid", D_METHOD("create", "window", "width", "height"), &RenderingNativeSurfaceAndroid::create_api);
 	ClassDB::bind_method(D_METHOD("get_window"), &RenderingNativeSurfaceAndroid::get_window_api);
@@ -140,7 +145,7 @@ bool GLManagerAndroid::validate_driver() const {
 	if (handle == nullptr) {
 		CRASH_NOW_MSG("Unable to open libGLESv3.so");
 	}
-	PFNGLGETSTRINGPROC getStringProc = (PFNGLGETSTRINGPROC) dlsym(handle, "glGetString");
+	PFNGLGETSTRINGPROC getStringProc = (PFNGLGETSTRINGPROC)dlsym(handle, "glGetString");
 	ERR_FAIL_COND_V_MSG(getStringProc == nullptr, false, "Unable to load glGetString symbol");
 
 	const String rendering_device_name = String::utf8((const char *)getStringProc(GL_RENDERER));
@@ -154,30 +159,29 @@ bool GLManagerAndroid::validate_driver() const {
 	return true;
 }
 
-
 GLManager *RenderingNativeSurfaceAndroid::create_gl_manager(const String &p_driver_name) {
 #if defined(GLES3_ENABLED)
 	if (p_driver_name == "opengl3") {
-		#ifdef GLAD_ENABLED
-			static const char *EGL_NAMES[] = {"libEGL.so"};
-			static const char *GL_NAMES[] = {"libGLESv3.so"};
-			gladSetupEGL(1, EGL_NAMES);
-			gladSetupGLES2(1, GL_NAMES);
-        #endif
-        return memnew(GLManagerAndroid);
+#ifdef GLAD_ENABLED
+		static const char *EGL_NAMES[] = { "libEGL.so" };
+		static const char *GL_NAMES[] = { "libGLESv3.so" };
+		gladSetupEGL(1, EGL_NAMES);
+		gladSetupGLES2(1, GL_NAMES);
+#endif
+		return memnew(GLManagerAndroid);
 	}
-	#if defined(ANGLE_ENABLED)
+#if defined(ANGLE_ENABLED)
 	if (p_driver_name == "opengl3_angle") {
 		setenv("ANGLE_FEATURE_OVERRIDES_DISABLED", "supportsSwapchainMaintenance1", 1);
-		#ifdef GLAD_ENABLED
-			static const char *EGL_NAMES[] = {"libEGL_angle.so"};
-			static const char *GL_NAMES[] = {"libGLESv2_angle.so"};
-			gladSetupEGL(1, EGL_NAMES);
-			gladSetupGLES2(1, GL_NAMES);
-		#endif
+#ifdef GLAD_ENABLED
+		static const char *EGL_NAMES[] = { "libEGL_angle.so" };
+		static const char *GL_NAMES[] = { "libGLESv2_angle.so" };
+		gladSetupEGL(1, EGL_NAMES);
+		gladSetupGLES2(1, GL_NAMES);
+#endif
 		return memnew(GLManagerANGLE_Embedded);
 	}
-	#endif
+#endif
 #endif
 	return nullptr;
 }
@@ -185,7 +189,6 @@ GLManager *RenderingNativeSurfaceAndroid::create_gl_manager(const String &p_driv
 void *RenderingNativeSurfaceAndroid::get_native_id() const {
 	return (void *)window;
 }
-
 
 RenderingNativeSurfaceAndroid::RenderingNativeSurfaceAndroid() {
 	// Does nothing.

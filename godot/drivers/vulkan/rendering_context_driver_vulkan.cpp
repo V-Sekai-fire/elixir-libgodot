@@ -995,7 +995,7 @@ RenderingContextDriver::SurfaceID RenderingContextDriverVulkan::surface_create(R
 
 		SurfaceID surface_id = SurfaceID(surface);
 		external_native_surface->set_surface(surface_id);
-		return  surface_id;
+		return surface_id;
 	}
 #endif
 
@@ -1056,7 +1056,7 @@ void RenderingContextDriverVulkan::surface_destroy(SurfaceID p_surface) {
 	if (should_destroy_surface) {
 		functions.DestroySurfaceKHR(instance, surface->vk_surface, get_allocation_callbacks(VK_OBJECT_TYPE_SURFACE_KHR));
 	}
-	
+
 	memdelete(surface);
 }
 

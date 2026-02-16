@@ -20,13 +20,13 @@ package com.android.apksig.apk;
  * Indicates that no APK Signing Block was found in an APK.
  */
 public class ApkSigningBlockNotFoundException extends Exception {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public ApkSigningBlockNotFoundException(String message) {
-        super(message);
-    }
+	public ApkSigningBlockNotFoundException(String message) {
+		super(message);
+	}
 
-    public ApkSigningBlockNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public ApkSigningBlockNotFoundException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

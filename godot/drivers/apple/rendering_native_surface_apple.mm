@@ -40,7 +40,6 @@
 #import <OpenGLES/EAGLDrawable.h>
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
-#import <OpenGLES/EAGLDrawable.h>
 #endif
 
 #if defined(EGL_STATIC)
@@ -48,9 +47,9 @@
 #endif
 #endif
 
-#include "rendering_native_surface_apple.h"
 #include "drivers/gles3/storage/texture_storage.h"
 #include "drivers/metal/rendering_context_driver_metal.h"
+#include "rendering_native_surface_apple.h"
 #include "servers/rendering/gl_manager.h"
 
 #if defined(GLES3_ENABLED)
@@ -71,7 +70,14 @@ struct WindowData {
 #endif
 };
 
-#define GL_ERR(expr) { expr; GLenum err = glGetError(); if (err) { NSLog(@"%s:%s: %x error", __FUNCTION__, #expr, err); } }
+#define GL_ERR(expr)                                             \
+	{                                                            \
+		expr;                                                    \
+		GLenum err = glGetError();                               \
+		if (err) {                                               \
+			NSLog(@"%s:%s: %x error", __FUNCTION__, #expr, err); \
+		}                                                        \
+	}
 
 class GLManagerApple : public GLManager {
 	DisplayServer::WindowID current_window = -1;
@@ -267,27 +273,27 @@ Ref<RenderingNativeSurfaceApple> RenderingNativeSurfaceApple::create(void *p_lay
 	Ref<RenderingNativeSurfaceApple> result;
 	if (!p_layer) {
 		String rendering_driver = ::OS::get_singleton()->get_current_rendering_driver_name();
-		CALayer* __block myLayer = nil;
+		CALayer *__block myLayer = nil;
 		dispatch_sync(dispatch_get_main_queue(), ^{
 #if defined(GLES3_ENABLED)
-        if (rendering_driver == "opengl3") {
+			if (rendering_driver == "opengl3") {
 #if defined(IOS_ENABLED)
-            myLayer = [[CAEAGLLayer alloc] init];
+				myLayer = [[CAEAGLLayer alloc] init];
 #elif defined(MACOS_ENABLED)
-            myLayer = [[CAOpenGLLayer alloc] init];
+				myLayer = [[CAOpenGLLayer alloc] init];
 #endif
-        }
+			}
 #endif
-		else {
-            myLayer = [[CAMetalLayer alloc] init];
-        }
-    	});
+			else {
+				myLayer = [[CAMetalLayer alloc] init];
+			}
+		});
 		if (!myLayer) {
 			return result;
 		}
-		p_layer = (void *) CFBridgingRetain(myLayer);
+		p_layer = (void *)CFBridgingRetain(myLayer);
 	} else {
-		p_layer = (void *) CFBridgingRetain((__bridge CALayer *) p_layer);
+		p_layer = (void *)CFBridgingRetain((__bridge CALayer *)p_layer);
 	}
 
 	result.instantiate();
@@ -331,8 +337,8 @@ GLManager *RenderingNativeSurfaceApple::create_gl_manager(const String &p_driver
 #ifdef GLAD_ENABLED
 		static CharString libegl_framework_path = OS_IOS::get_singleton()->get_library_path("libEGL.framework").utf8();
 		static CharString libglesv2_framework_path = OS_IOS::get_singleton()->get_library_path("libGLESv2.framework").utf8();
-		const char * eg = libegl_framework_path.get_data();
-		const char * gl = libglesv2_framework_path.get_data();
+		const char *eg = libegl_framework_path.get_data();
+		const char *gl = libglesv2_framework_path.get_data();
 		gladSetupEGL(1, &eg);
 		gladSetupGLES2(1, &gl);
 #endif

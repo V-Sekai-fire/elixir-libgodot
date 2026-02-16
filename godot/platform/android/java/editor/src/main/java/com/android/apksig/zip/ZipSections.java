@@ -25,61 +25,61 @@ import java.nio.ByteBuffer;
  * contents.
  */
 public class ZipSections {
-    private final long mCentralDirectoryOffset;
-    private final long mCentralDirectorySizeBytes;
-    private final int mCentralDirectoryRecordCount;
-    private final long mEocdOffset;
-    private final ByteBuffer mEocd;
+	private final long mCentralDirectoryOffset;
+	private final long mCentralDirectorySizeBytes;
+	private final int mCentralDirectoryRecordCount;
+	private final long mEocdOffset;
+	private final ByteBuffer mEocd;
 
-    public ZipSections(
-            long centralDirectoryOffset,
-            long centralDirectorySizeBytes,
-            int centralDirectoryRecordCount,
-            long eocdOffset,
-            ByteBuffer eocd) {
-        mCentralDirectoryOffset = centralDirectoryOffset;
-        mCentralDirectorySizeBytes = centralDirectorySizeBytes;
-        mCentralDirectoryRecordCount = centralDirectoryRecordCount;
-        mEocdOffset = eocdOffset;
-        mEocd = eocd;
-    }
+	public ZipSections(
+			long centralDirectoryOffset,
+			long centralDirectorySizeBytes,
+			int centralDirectoryRecordCount,
+			long eocdOffset,
+			ByteBuffer eocd) {
+		mCentralDirectoryOffset = centralDirectoryOffset;
+		mCentralDirectorySizeBytes = centralDirectorySizeBytes;
+		mCentralDirectoryRecordCount = centralDirectoryRecordCount;
+		mEocdOffset = eocdOffset;
+		mEocd = eocd;
+	}
 
-    /**
-     * Returns the start offset of the ZIP Central Directory. This value is taken from the
-     * ZIP End of Central Directory record.
-     */
-    public long getZipCentralDirectoryOffset() {
-        return mCentralDirectoryOffset;
-    }
+	/**
+	 * Returns the start offset of the ZIP Central Directory. This value is taken from the
+	 * ZIP End of Central Directory record.
+	 */
+	public long getZipCentralDirectoryOffset() {
+		return mCentralDirectoryOffset;
+	}
 
-    /**
-     * Returns the size (in bytes) of the ZIP Central Directory. This value is taken from the
-     * ZIP End of Central Directory record.
-     */
-    public long getZipCentralDirectorySizeBytes() {
-        return mCentralDirectorySizeBytes;
-    }
+	/**
+	 * Returns the size (in bytes) of the ZIP Central Directory. This value is taken from the
+	 * ZIP End of Central Directory record.
+	 */
+	public long getZipCentralDirectorySizeBytes() {
+		return mCentralDirectorySizeBytes;
+	}
 
-    /**
-     * Returns the number of records in the ZIP Central Directory. This value is taken from the
-     * ZIP End of Central Directory record.
-     */
-    public int getZipCentralDirectoryRecordCount() {
-        return mCentralDirectoryRecordCount;
-    }
+	/**
+	 * Returns the number of records in the ZIP Central Directory. This value is taken from the
+	 * ZIP End of Central Directory record.
+	 */
+	public int getZipCentralDirectoryRecordCount() {
+		return mCentralDirectoryRecordCount;
+	}
 
-    /**
-     * Returns the start offset of the ZIP End of Central Directory record. The record extends
-     * until the very end of the APK.
-     */
-    public long getZipEndOfCentralDirectoryOffset() {
-        return mEocdOffset;
-    }
+	/**
+	 * Returns the start offset of the ZIP End of Central Directory record. The record extends
+	 * until the very end of the APK.
+	 */
+	public long getZipEndOfCentralDirectoryOffset() {
+		return mEocdOffset;
+	}
 
-    /**
-     * Returns the contents of the ZIP End of Central Directory.
-     */
-    public ByteBuffer getZipEndOfCentralDirectory() {
-        return mEocd;
-    }
+	/**
+	 * Returns the contents of the ZIP End of Central Directory.
+	 */
+	public ByteBuffer getZipEndOfCentralDirectory() {
+		return mEocd;
+	}
 }

@@ -1027,9 +1027,9 @@ void Window::set_native_surface(Ref<RenderingNativeSurface> p_native_surface) {
 		return;
 	}
 	if (new_native_handle.is_valid()) {
-        // If it is a valid surface, then make us visible
-        set_visible(true);
-    }
+		// If it is a valid surface, then make us visible
+		set_visible(true);
+	}
 	if (!initialized) {
 		native_surface = new_native_handle;
 		return;

@@ -6426,7 +6426,7 @@ void RenderingDevice::_begin_frame(bool p_presented) {
 	_stall_for_frame(frames->get_frame_index());
 
 	if (command_pool_reset_enabled) {
-		GodotProfileZoneGrouped(_profile_zone, "driver->command_pool_reset");	
+		GodotProfileZoneGrouped(_profile_zone, "driver->command_pool_reset");
 		bool reset = driver->command_pool_reset(frames->get_current_frame().command_pool);
 		ERR_FAIL_COND(!reset);
 	}

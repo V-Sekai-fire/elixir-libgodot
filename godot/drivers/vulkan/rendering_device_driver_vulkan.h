@@ -275,7 +275,7 @@ public:
 			CommandBufferID p_cmd_buffer,
 			BitField<PipelineStageBits> p_src_stages,
 			BitField<PipelineStageBits> p_dst_stages,
-			VectorView<MemoryBarrier> p_memory_barriers,
+			VectorView<RDD::MemoryBarrier> p_memory_barriers,
 			VectorView<BufferBarrier> p_buffer_barriers,
 			VectorView<TextureBarrier> p_texture_barriers) override final;
 
@@ -385,7 +385,7 @@ private:
 		TightLocalVector<bool> in_use;
 		int last_drawn_buffer = 0;
 		uint64_t version = 0;
-	
+
 	public:
 		virtual VkSwapchainKHR get_swapchain_handle() const { return VK_NULL_HANDLE; }
 
@@ -408,7 +408,7 @@ private:
 		void set_image_index(uint32_t p_image_index) {
 			ERR_FAIL_COND(p_image_index < 0);
 			image_index = p_image_index;
-		};
+		}
 
 		BinaryMutex &get_mutex() {
 			return mutex;
@@ -418,7 +418,7 @@ private:
 			if (images.size() == 0) {
 				return;
 			}
-			
+
 			in_use[p_index] = p_in_use;
 		}
 
@@ -432,7 +432,7 @@ private:
 
 		uint64_t get_version() const { return version; }
 
-		void set_color_space(VkColorSpaceKHR p_color_space){ color_space = p_color_space; }
+		void set_color_space(VkColorSpaceKHR p_color_space) { color_space = p_color_space; }
 
 		virtual FramebufferID acquire_framebuffer(CommandQueue *p_command_queue, bool &r_resize_required) = 0;
 
@@ -453,7 +453,7 @@ private:
 		virtual ~SwapChain() = default;
 	};
 
-	class PresentableSwapChain: public SwapChain {
+	class PresentableSwapChain : public SwapChain {
 		VkSwapchainKHR vk_swapchain = VK_NULL_HANDLE;
 
 	public:
@@ -466,16 +466,16 @@ private:
 		virtual void release() override final;
 
 		PresentableSwapChain(
-			RenderingDeviceDriverVulkan *p_device_driver,
-			RenderingContextDriver::SurfaceID p_surface,
-			VkFormat p_format,
-			VkColorSpaceKHR p_color_space,
-			RenderPassInfo *p_render_pass
-		): SwapChain(p_device_driver, p_surface, p_format, p_color_space, p_render_pass) {}
+				RenderingDeviceDriverVulkan *p_device_driver,
+				RenderingContextDriver::SurfaceID p_surface,
+				VkFormat p_format,
+				VkColorSpaceKHR p_color_space,
+				RenderPassInfo *p_render_pass) :
+				SwapChain(p_device_driver, p_surface, p_format, p_color_space, p_render_pass) {}
 	};
 
 #ifdef EXTERNAL_TARGET_ENABLED
-	class ExternalSwapChain: public SwapChain {
+	class ExternalSwapChain : public SwapChain {
 		TightLocalVector<VkDeviceMemory> image_memories;
 		TightLocalVector<bool> externally_acquired;
 		TightLocalVector<uint64_t> external_handles;
@@ -569,12 +569,12 @@ private:
 		virtual void release() override final;
 
 		ExternalSwapChain(
-			RenderingDeviceDriverVulkan *p_device_driver,
-			RenderingContextDriver::SurfaceID p_surface,
-			VkFormat p_format,
-			VkColorSpaceKHR p_color_space,
-			RenderPassInfo *p_render_pass
-		): SwapChain(p_device_driver, p_surface, p_format, p_color_space, p_render_pass) {
+				RenderingDeviceDriverVulkan *p_device_driver,
+				RenderingContextDriver::SurfaceID p_surface,
+				VkFormat p_format,
+				VkColorSpaceKHR p_color_space,
+				RenderPassInfo *p_render_pass) :
+				SwapChain(p_device_driver, p_surface, p_format, p_color_space, p_render_pass) {
 			get_number_of_images_func = Callable(new ExternalSwapChainGetNumberOfImages(this));
 			get_native_handle_func = Callable(new ExternalSwapChainGetNativeHandle(this));
 			get_allocation_size_func = Callable(new ExternalSwapChainGetAllocationSize(this));
@@ -584,7 +584,8 @@ private:
 	};
 
 	class ExternalSwapChainGetNumberOfImages : public CallableCustom {
-		ExternalSwapChain* swapchain = nullptr;
+		ExternalSwapChain *swapchain = nullptr;
+
 	public:
 		virtual uint32_t hash() const override {
 			return (intptr_t)this;
@@ -610,11 +611,11 @@ private:
 			return &ExternalSwapChainGetNumberOfImages::compare_less_func;
 		}
 
-		bool is_valid() const  override {
+		bool is_valid() const override {
 			return true;
 		}
 
-		virtual ObjectID get_object() const  override {
+		virtual ObjectID get_object() const override {
 			return ObjectID();
 		}
 
@@ -628,14 +629,16 @@ private:
 			r_call_error.error = Callable::CallError::CALL_OK;
 		}
 
-		ExternalSwapChainGetNumberOfImages(ExternalSwapChain* p_swapchain): CallableCustom() {
+		ExternalSwapChainGetNumberOfImages(ExternalSwapChain *p_swapchain) :
+				CallableCustom() {
 			swapchain = p_swapchain;
 		}
 	};
 
 	class ExternalSwapChainGetNativeHandle : public CallableCustom {
-		ExternalSwapChain* swapchain = nullptr;
+		ExternalSwapChain *swapchain = nullptr;
 		const int required_argument_count = 1;
+
 	public:
 		virtual uint32_t hash() const override {
 			return (intptr_t)this;
@@ -661,11 +664,11 @@ private:
 			return &ExternalSwapChainGetNativeHandle::compare_less_func;
 		}
 
-		bool is_valid() const  override {
+		bool is_valid() const override {
 			return true;
 		}
 
-		virtual ObjectID get_object() const  override {
+		virtual ObjectID get_object() const override {
 			return ObjectID();
 		}
 
@@ -690,14 +693,16 @@ private:
 			r_call_error.error = Callable::CallError::CALL_OK;
 		}
 
-		ExternalSwapChainGetNativeHandle(ExternalSwapChain* p_swapchain): CallableCustom() {
+		ExternalSwapChainGetNativeHandle(ExternalSwapChain *p_swapchain) :
+				CallableCustom() {
 			swapchain = p_swapchain;
 		}
 	};
 
 	class ExternalSwapChainGetAllocationSize : public CallableCustom {
-		ExternalSwapChain* swapchain = nullptr;
+		ExternalSwapChain *swapchain = nullptr;
 		const int required_argument_count = 1;
+
 	public:
 		virtual uint32_t hash() const override {
 			return (intptr_t)this;
@@ -723,11 +728,11 @@ private:
 			return &ExternalSwapChainGetAllocationSize::compare_less_func;
 		}
 
-		bool is_valid() const  override {
+		bool is_valid() const override {
 			return true;
 		}
 
-		virtual ObjectID get_object() const  override {
+		virtual ObjectID get_object() const override {
 			return ObjectID();
 		}
 
@@ -752,14 +757,16 @@ private:
 			r_call_error.error = Callable::CallError::CALL_OK;
 		}
 
-		ExternalSwapChainGetAllocationSize(ExternalSwapChain* p_swapchain): CallableCustom() {
+		ExternalSwapChainGetAllocationSize(ExternalSwapChain *p_swapchain) :
+				CallableCustom() {
 			swapchain = p_swapchain;
 		}
 	};
 
 	class ExternalSwapChainGetMemoryTypeIndex : public CallableCustom {
-		ExternalSwapChain* swapchain = nullptr;
+		ExternalSwapChain *swapchain = nullptr;
 		const int required_argument_count = 1;
+
 	public:
 		virtual uint32_t hash() const override {
 			return (intptr_t)this;
@@ -785,11 +792,11 @@ private:
 			return &ExternalSwapChainGetMemoryTypeIndex::compare_less_func;
 		}
 
-		bool is_valid() const  override {
+		bool is_valid() const override {
 			return true;
 		}
 
-		virtual ObjectID get_object() const  override {
+		virtual ObjectID get_object() const override {
 			return ObjectID();
 		}
 
@@ -814,14 +821,16 @@ private:
 			r_call_error.error = Callable::CallError::CALL_OK;
 		}
 
-		ExternalSwapChainGetMemoryTypeIndex(ExternalSwapChain* p_swapchain): CallableCustom() {
+		ExternalSwapChainGetMemoryTypeIndex(ExternalSwapChain *p_swapchain) :
+				CallableCustom() {
 			swapchain = p_swapchain;
 		}
 	};
 
 	class ExternalSwapChainGetImageCreateInfo : public CallableCustom {
-		ExternalSwapChain* swapchain = nullptr;
+		ExternalSwapChain *swapchain = nullptr;
 		const int required_argument_count = 1;
+
 	public:
 		virtual uint32_t hash() const override {
 			return (intptr_t)this;
@@ -847,11 +856,11 @@ private:
 			return &ExternalSwapChainGetImageCreateInfo::compare_less_func;
 		}
 
-		bool is_valid() const  override {
+		bool is_valid() const override {
 			return true;
 		}
 
-		virtual ObjectID get_object() const  override {
+		virtual ObjectID get_object() const override {
 			return ObjectID();
 		}
 
@@ -876,7 +885,8 @@ private:
 			r_call_error.error = Callable::CallError::CALL_OK;
 		}
 
-		ExternalSwapChainGetImageCreateInfo(ExternalSwapChain* p_swapchain): CallableCustom() {
+		ExternalSwapChainGetImageCreateInfo(ExternalSwapChain *p_swapchain) :
+				CallableCustom() {
 			swapchain = p_swapchain;
 		}
 	};
@@ -908,7 +918,7 @@ public:
 	VkImage external_swap_chain_get_image(SwapChainID p_swap_chain, uint32_t p_index);
 	int external_swap_chain_grab_image(SwapChainID p_swap_chain);
 
-	VkResult get_external_memory_handle(VkDevice p_device, VkDeviceMemory p_device_memory, uint64_t* p_exernal_handle_out);
+	VkResult get_external_memory_handle(VkDevice p_device, VkDeviceMemory p_device_memory, uint64_t *p_exernal_handle_out);
 #endif
 
 private:

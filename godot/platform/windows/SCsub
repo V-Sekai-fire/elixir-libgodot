@@ -49,7 +49,7 @@ common_win_wrap = [
 env_wrap = env.Clone()
 
 # TODO causes linking error
-#if env["arch"] == "x86_64":
+# if env["arch"] == "x86_64":
 #    env_cpp_check = env.Clone()
 #    env_cpp_check.add_source_files(sources, ["cpu_feature_validation.c"])
 #    if env.msvc:
@@ -91,9 +91,9 @@ if env["library_type"] == "static_library":
     arrange_program_clean(prog)
 elif env["library_type"] == "shared_library":
     prog = env.add_shared_library("#bin/godot", sources + libgodot_files + host_interface)
-    env.Append(CPPDEFINES = ["EMBEDDED"])
+    env.Append(CPPDEFINES=["EMBEDDED"])
     arrange_program_clean(prog)
-else: # building executable
+else:  # building executable
     prog = env.add_program("#bin/godot", sources + host_interface, PROGSUFFIX=env["PROGSUFFIX"])
     arrange_program_clean(prog)
 

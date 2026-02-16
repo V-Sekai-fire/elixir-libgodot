@@ -82,13 +82,12 @@ struct PerfettoGroupedEventEnder {
 #define GodotProfileFrameMark // TODO
 #define GodotProfileZone(m_zone_name) TRACE_EVENT("godot", m_zone_name);
 #define GodotProfileZoneGroupedFirst(m_group_name, m_zone_name) \
-	TRACE_EVENT_BEGIN("godot", m_zone_name);                  \
+	TRACE_EVENT_BEGIN("godot", m_zone_name);                    \
 	PerfettoGroupedEventEnder __godot_perfetto_zone_##m_group_name
 #define GodotProfileZoneGroupedEndEarly(m_group_name, m_zone_name) __godot_perfetto_zone_##m_group_name.~PerfettoGroupedEventEnder()
 #define GodotProfileZoneGrouped(m_group_name, m_zone_name) \
-    __godot_perfetto_zone_##m_group_name._end_now();     \
+	__godot_perfetto_zone_##m_group_name._end_now();       \
 	TRACE_EVENT_BEGIN("godot", m_zone_name);
-	
 
 void godot_init_profiler();
 

@@ -34,8 +34,8 @@
 #ifdef __APPLE__
 #ifdef VULKAN_ENABLED
 
-#include "drivers/vulkan/rendering_native_surface_vulkan.h"
 #include "drivers/vulkan/godot_vulkan.h"
+#include "drivers/vulkan/rendering_native_surface_vulkan.h"
 
 const char *RenderingContextDriverVulkanApple::_get_platform_surface_extension() const {
 	return VK_EXT_METAL_SURFACE_EXTENSION_NAME;

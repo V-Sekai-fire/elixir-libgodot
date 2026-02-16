@@ -43,73 +43,73 @@
 
 class GLManagerExternal;
 
-class RenderingNativeSurfaceExternalTarget : public RenderingNativeSurface {    // Defines both Vulkan and OpenGL behavior.
-    GDCLASS(RenderingNativeSurfaceExternalTarget, RenderingNativeSurface);
+class RenderingNativeSurfaceExternalTarget : public RenderingNativeSurface { // Defines both Vulkan and OpenGL behavior.
+	GDCLASS(RenderingNativeSurfaceExternalTarget, RenderingNativeSurface);
 
-    static void _bind_methods();
+	static void _bind_methods();
 
 private:
-    // Common members:
-    String rendering_driver;
+	// Common members:
+	String rendering_driver;
 
-    uint32_t width = 0;
-    uint32_t height = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
 
-    // Vulkan specific members:
-    Callable post_images_created_callback;
-    Callable pre_images_released_callback;
-    RenderingContextDriver::SurfaceID surface;
+	// Vulkan specific members:
+	Callable post_images_created_callback;
+	Callable pre_images_released_callback;
+	RenderingContextDriver::SurfaceID surface;
 
 #ifdef GLES3_ENABLED
-    // OpenGL specific members:
-    Callable make_current;
-    Callable done_current;
-    uint64_t get_proc_address = 0u;
+	// OpenGL specific members:
+	Callable make_current;
+	Callable done_current;
+	uint64_t get_proc_address = 0u;
 #endif
 
 public:
-    // VULKAN SPECIFIC OPERATIONS:
-    uint32_t get_width() const;
-    uint32_t get_height() const;
-    DisplayServer::WindowID get_window();
-    void set_surface(RenderingContextDriver::SurfaceID p_surface);
-    RenderingContextDriver::SurfaceID get_surface_id();
+	// VULKAN SPECIFIC OPERATIONS:
+	uint32_t get_width() const;
+	uint32_t get_height() const;
+	DisplayServer::WindowID get_window();
+	void set_surface(RenderingContextDriver::SurfaceID p_surface);
+	RenderingContextDriver::SurfaceID get_surface_id();
 
-    static Ref<RenderingNativeSurfaceExternalTarget> create_api(String p_rendering_driver, Size2i p_initial_size);
+	static Ref<RenderingNativeSurfaceExternalTarget> create_api(String p_rendering_driver, Size2i p_initial_size);
 
 #ifdef VULKAN_ENABLED
-    static Ref<RenderingNativeSurfaceExternalTarget> create(String p_rendering_driver, Size2i p_initial_size);
+	static Ref<RenderingNativeSurfaceExternalTarget> create(String p_rendering_driver, Size2i p_initial_size);
 #endif
 
-    virtual RenderingContextDriver *create_rendering_context(const String &p_driver_name) override final;
+	virtual RenderingContextDriver *create_rendering_context(const String &p_driver_name) override final;
 
-    virtual void setup_external_swapchain_callbacks() override final;
+	virtual void setup_external_swapchain_callbacks() override final;
 
-    // Called by host (registered in GDExtension):
+	// Called by host (registered in GDExtension):
 
-    void set_external_swapchain_callbacks(Callable p_images_created, Callable p_images_released);
+	void set_external_swapchain_callbacks(Callable p_images_created, Callable p_images_released);
 
-    void resize(Size2i p_new_size);
+	void resize(Size2i p_new_size);
 
-    // Call in Qt to get the next image that is already ready by Godot
-    // Wrap it in QSGTexture and set it as render target
-    int acquire_next_image();
+	// Call in Qt to get the next image that is already ready by Godot
+	// Wrap it in QSGTexture and set it as render target
+	int acquire_next_image();
 
-    // When the rendering is done for an image, call this in Qt to release it, so Godot knows that it can use it as a render target again.
-    void release_image(int p_index);
+	// When the rendering is done for an image, call this in Qt to release it, so Godot knows that it can use it as a render target again.
+	void release_image(int p_index);
 
-    // OPENGL SPECIFIC OPERATIONS:
+	// OPENGL SPECIFIC OPERATIONS:
 #ifdef GLES3_ENABLED
-    void set_opengl_callbacks(Callable p_make_current, Callable p_done_current, uint64_t p_get_proc_address);
+	void set_opengl_callbacks(Callable p_make_current, Callable p_done_current, uint64_t p_get_proc_address);
 #endif
-    virtual GLManager *create_gl_manager(const String &p_driver_name) override;
-    uint32_t get_frame_texture(DisplayServer::WindowID p_window_id) const;
+	virtual GLManager *create_gl_manager(const String &p_driver_name) override;
+	uint32_t get_frame_texture(DisplayServer::WindowID p_window_id) const;
 
-    virtual void *get_native_id() const override { return nullptr; }
+	virtual void *get_native_id() const override { return nullptr; }
 
-    RenderingNativeSurfaceExternalTarget() {};
-    RenderingNativeSurfaceExternalTarget(String p_rendering_driver, int p_width, int p_height);
-    ~RenderingNativeSurfaceExternalTarget() {};
+	RenderingNativeSurfaceExternalTarget() {}
+	RenderingNativeSurfaceExternalTarget(String p_rendering_driver, int p_width, int p_height);
+	~RenderingNativeSurfaceExternalTarget() {}
 };
 
 #endif

@@ -556,7 +556,6 @@ void setup_android_class_loader(jobject p_class_loader) {
 	if (p_class_loader) {
 		class_loader = p_class_loader;
 	} else {
-
 		jclass known_class = env->FindClass("org/godotengine/godot/Godot");
 		ERR_FAIL_NULL(known_class);
 

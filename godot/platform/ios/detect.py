@@ -154,7 +154,7 @@ def configure(env: "SConsEnvironment"):
     if env["coreaudio_enabled"]:
         env.Append(CPPDEFINES=["COREAUDIO_ENABLED"])
 
-    #if env["metal"] and env["ios_simulator"]:
+    # if env["metal"] and env["ios_simulator"]:
     #    print_warning("iOS simulator does not support the Metal rendering driver")
     #    env["metal"] = False
 

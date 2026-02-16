@@ -72,6 +72,7 @@ public:
 			target = 0;
 		}
 	}
+
 private:
 	GLenum target = 0;
 	GLint framebuffer;

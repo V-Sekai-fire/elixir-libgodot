@@ -128,34 +128,30 @@ if env["library_type"] != "static_library" and lib_arch_dir != "" and host_subpa
 
 
 elif env["library_type"] == "static_library":
+
     def combine_libs(target=None, source=None, env=None):
         lib_path = target[0].srcnode().abspath
-        from tempfile import mkstemp
         import os
+        from tempfile import mkstemp
+
         (fd, tmp_path) = mkstemp()
-        with os.fdopen(fd, 'w') as f:
-            f.write("CREATE " + lib_path + '\n')
+        with os.fdopen(fd, "w") as f:
+            f.write("CREATE " + lib_path + "\n")
             for lib in source:
-                f.write("ADDLIB " + lib.srcnode().abspath + '\n')
-            f.write("SAVE" + '\n')
-        
+                f.write("ADDLIB " + lib.srcnode().abspath + "\n")
+            f.write("SAVE" + "\n")
+
         try:
             os.remove(lib_path)
         except:
             pass
-        
-        env.Execute(
-            env["AR"]
-            + ' -M < '
-            + tmp_path
-        )
 
-        env.Execute(
-            env["RANLIB"]
-            + ' '
-            + lib_path
-        )
+        env.Execute(env["AR"] + " -M < " + tmp_path)
+
+        env.Execute(env["RANLIB"] + " " + lib_path)
 
         os.remove(tmp_path)
 
-    combine_command = env_android.Command("#bin/libgodot" + env_android["LIBSUFFIX"], [lib] + env_android["LIBS"], combine_libs)
+    combine_command = env_android.Command(
+        "#bin/libgodot" + env_android["LIBSUFFIX"], [lib] + env_android["LIBS"], combine_libs
+    )

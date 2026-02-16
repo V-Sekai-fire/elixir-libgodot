@@ -81,8 +81,8 @@ class Wrapped {
 
 	template <typename T>
 	_ALWAYS_INLINE_ static void _set_construct_info() {
-	    get_constructing_extension_class_name() = T::_get_extension_class_name();
-	    get_constructing_class_binding_callbacks() = &T::_gde_binding_callbacks;
+		get_constructing_extension_class_name() = T::_get_extension_class_name();
+		get_constructing_class_binding_callbacks() = &T::_gde_binding_callbacks;
 	}
 
 protected:

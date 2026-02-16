@@ -1,10 +1,5 @@
 package org.godotengine.godot;
 
-import android.app.Activity;
-import android.content.res.AssetManager;
-import android.hardware.SensorEvent;
-import android.view.Surface;
-
 import org.godotengine.godot.gl.GodotRenderer;
 import org.godotengine.godot.io.directory.DirectoryAccessHandler;
 import org.godotengine.godot.io.file.FileAccessHandler;
@@ -12,21 +7,25 @@ import org.godotengine.godot.tts.GodotTTS;
 import org.godotengine.godot.utils.GodotNetUtils;
 import org.godotengine.godot.variant.Callable;
 
+import android.app.Activity;
+import android.content.res.AssetManager;
+import android.hardware.SensorEvent;
+import android.view.Surface;
+
 import javax.microedition.khronos.opengles.GL10;
 
 public interface IGodotLib {
-
 	/**
 	 * Invoked on the main thread to initialize Godot native layer.
 	 */
 	public boolean initialize(
-		Godot p_instance,
-		AssetManager p_asset_manager,
-		GodotIO godotIO,
-		GodotNetUtils netUtils,
-		DirectoryAccessHandler directoryAccessHandler,
-		FileAccessHandler fileAccessHandler,
-		boolean use_apk_expansion);
+			Godot p_instance,
+			AssetManager p_asset_manager,
+			GodotIO godotIO,
+			GodotNetUtils netUtils,
+			DirectoryAccessHandler directoryAccessHandler,
+			FileAccessHandler fileAccessHandler,
+			boolean use_apk_expansion);
 
 	/**
 	 * Invoked on the main thread to clean up Godot native layer.

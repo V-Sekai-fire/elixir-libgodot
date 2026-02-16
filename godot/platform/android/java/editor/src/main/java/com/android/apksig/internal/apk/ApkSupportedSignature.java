@@ -20,16 +20,15 @@ package com.android.apksig.internal.apk;
  * Base implementation of a supported signature for an APK.
  */
 public class ApkSupportedSignature {
-    public final SignatureAlgorithm algorithm;
-    public final byte[] signature;
+	public final SignatureAlgorithm algorithm;
+	public final byte[] signature;
 
-    /**
-     * Constructs a new supported signature using the provided {@code algorithm} and {@code
-     * signature} bytes.
-     */
-    public ApkSupportedSignature(SignatureAlgorithm algorithm, byte[] signature) {
-        this.algorithm = algorithm;
-        this.signature = signature;
-    }
-
+	/**
+	 * Constructs a new supported signature using the provided {@code algorithm} and {@code
+	 * signature} bytes.
+	 */
+	public ApkSupportedSignature(SignatureAlgorithm algorithm, byte[] signature) {
+		this.algorithm = algorithm;
+		this.signature = signature;
+	}
 }

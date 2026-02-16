@@ -2489,7 +2489,7 @@ void RenderingDeviceDriverVulkan::command_pipeline_barrier(
 		CommandBufferID p_cmd_buffer,
 		BitField<PipelineStageBits> p_src_stages,
 		BitField<PipelineStageBits> p_dst_stages,
-		VectorView<MemoryBarrier> p_memory_barriers,
+		VectorView<RDD::MemoryBarrier> p_memory_barriers,
 		VectorView<BufferBarrier> p_buffer_barriers,
 		VectorView<TextureBarrier> p_texture_barriers) {
 	VkMemoryBarrier *vk_memory_barriers = ALLOCA_ARRAY(VkMemoryBarrier, p_memory_barriers.size());
@@ -2747,7 +2747,7 @@ Error RenderingDeviceDriverVulkan::command_queue_execute_and_present(CommandQueu
 	}
 
 	thread_local LocalVector<VkSwapchainKHR> swapchains;
-	thread_local LocalVector<SwapChain*> presented_swapchains;
+	thread_local LocalVector<SwapChain *> presented_swapchains;
 	thread_local LocalVector<uint32_t> image_indices;
 	swapchains.clear();
 	presented_swapchains.clear();
@@ -3174,7 +3174,6 @@ void RenderingDeviceDriverVulkan::ExternalSwapChain::release() {
 		command_queues_acquired.clear();
 		command_queues_acquired_semaphores.clear();
 
-
 		for (VkSemaphore semaphore : present_semaphores) {
 			vkDestroySemaphore(device_driver->vk_device, semaphore, VKC::get_allocation_callbacks(VK_OBJECT_TYPE_SEMAPHORE));
 		}
@@ -3293,7 +3292,7 @@ Error RenderingDeviceDriverVulkan::PresentableSwapChain::resize(CommandQueueID p
 	VkResult err = VK_SUCCESS;
 
 	CommandQueue *command_queue = (CommandQueue *)(p_cmd_queue.id);
-	
+
 	// Validate if the command queue being used supports creating the swap chain for this surface.
 	const RenderingContextDriverVulkan::Functions &functions = device_driver->context_driver->functions_get();
 	if (!device_driver->context_driver->queue_family_supports_present(device_driver->physical_device, command_queue->queue_family, surface)) {
@@ -3348,7 +3347,7 @@ Error RenderingDeviceDriverVulkan::PresentableSwapChain::resize(CommandQueueID p
 	uint32_t present_modes_count = 0;
 	err = functions.GetPhysicalDeviceSurfacePresentModesKHR(device_driver->physical_device, surface_ptr->vk_surface, &present_modes_count, nullptr);
 	ERR_FAIL_COND_V_MSG(err != VK_SUCCESS, ERR_CANT_CREATE, string_VkResult(err));
-	
+
 	present_modes.resize(present_modes_count);
 	err = functions.GetPhysicalDeviceSurfacePresentModesKHR(device_driver->physical_device, surface_ptr->vk_surface, &present_modes_count, present_modes.ptr());
 	ERR_FAIL_COND_V_MSG(err != VK_SUCCESS, ERR_CANT_CREATE, string_VkResult(err));
@@ -3569,7 +3568,7 @@ Error RenderingDeviceDriverVulkan::ExternalSwapChain::resize(CommandQueueID p_cm
 
 	uint32_t sp_image_count = p_desired_framebuffer_count;
 	VkResult err = VK_SUCCESS;
-	
+
 	if (surface_ptr->width == 0 || surface_ptr->height == 0) {
 		// Likely window minimized, no swapchain created.
 		return ERR_SKIP;
@@ -3594,11 +3593,11 @@ Error RenderingDeviceDriverVulkan::ExternalSwapChain::resize(CommandQueueID p_cm
 		for (uint32_t i = 0; i < swapchainImages.size(); i++) {
 			VkExternalMemoryImageCreateInfo externalMemoryImageCreateInfo = {
 				/*sType*/ VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO,
-    			/*pNext*/ nullptr,
+				/*pNext*/ nullptr,
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    			/*handleTypes*/ VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+				/*handleTypes*/ VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
 #elif defined(UNIX_ENABLED)
-				/*handleTypes*/ VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT			
+				/*handleTypes*/ VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
 #endif
 			};
 
@@ -3643,9 +3642,9 @@ Error RenderingDeviceDriverVulkan::ExternalSwapChain::resize(CommandQueueID p_cm
 				VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
 				nullptr,
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    			VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+				VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
 #elif defined(UNIX_ENABLED)
-				VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT			
+				VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
 #endif
 			};
 
@@ -3822,25 +3821,25 @@ RDD::FramebufferID RenderingDeviceDriverVulkan::PresentableSwapChain::acquire_fr
 #ifdef EXTERNAL_TARGET_ENABLED
 RDD::FramebufferID RenderingDeviceDriverVulkan::ExternalSwapChain::acquire_framebuffer(CommandQueue *p_command_queue, bool &r_resize_required) {
 	// NOTE:
-		// external_swapchain_acquire_next is NOT acquire_framebuffer
-			// acquire_framebuffer happens internally and it acquires a free image for drawing.
-			// External acquiring means the host acquires an already rendered image for displaying. -> ExternalSwapChain::grab_image -> Only RenderingNativeSurfaceExternalTarget will call this.
+	// external_swapchain_acquire_next is NOT acquire_framebuffer
+	// acquire_framebuffer happens internally and it acquires a free image for drawing.
+	// External acquiring means the host acquires an already rendered image for displaying. -> ExternalSwapChain::grab_image -> Only RenderingNativeSurfaceExternalTarget will call this.
 
-    MutexLock external_lock(mutex);
+	MutexLock external_lock(mutex);
 
 	if (images.is_empty() || device_driver->context_driver->surface_get_needs_resize(surface)) {
 		r_resize_required = true;
 		return FramebufferID();
 	}
 
-    ERR_FAIL_COND_V_MSG(free_count == 0, FramebufferID(), "All images of the swapchain have been externally acquired.");
-    uint32_t count = 0;
-    do {
-        ERR_FAIL_COND_V_MSG(count == images.size(), FramebufferID(), "All images of the swapchain has been externally acquired.");
-        count++;
+	ERR_FAIL_COND_V_MSG(free_count == 0, FramebufferID(), "All images of the swapchain have been externally acquired.");
+	uint32_t count = 0;
+	do {
+		ERR_FAIL_COND_V_MSG(count == images.size(), FramebufferID(), "All images of the swapchain has been externally acquired.");
+		count++;
 		image_index = (image_index + 1) % images.size();
-    } while (externally_acquired[image_index] || image_index == last_drawn_buffer);
-    in_use[image_index] = true;
+	} while (externally_acquired[image_index] || image_index == last_drawn_buffer);
+	in_use[image_index] = true;
 
 	return framebuffers[image_index];
 }

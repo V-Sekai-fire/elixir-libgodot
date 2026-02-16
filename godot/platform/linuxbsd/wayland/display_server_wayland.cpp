@@ -39,8 +39,8 @@
 #define DEBUG_LOG_WAYLAND(...)
 #endif
 
-#include "servers/rendering/dummy/rasterizer_dummy.h"
 #include "rendering_native_surface_wayland.h"
+#include "servers/rendering/dummy/rasterizer_dummy.h"
 
 #ifdef VULKAN_ENABLED
 #include "servers/rendering/renderer_rd/renderer_compositor_rd.h"

@@ -42,6 +42,6 @@
 #include "thirdparty/angle/include/EGL/egl.h"
 #include "thirdparty/angle/include/EGL/eglext.h"
 #elif defined(ANGLE_ENABLED)
-#include "thirdparty/glad/glad/gl.h"
 #include "thirdparty/glad/glad/egl.h"
+#include "thirdparty/glad/glad/gl.h"
 #endif

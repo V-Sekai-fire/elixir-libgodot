@@ -2575,7 +2575,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			available_drivers.push_back("opengl3");
 			available_drivers.push_back("opengl3_angle");
 			available_drivers.push_back("opengl3_es");
-            available_drivers.push_back("opengl3_novalidate");
+			available_drivers.push_back("opengl3_novalidate");
 		}
 #endif
 		if (rendering_method == "dummy") {
@@ -3875,7 +3875,7 @@ void Main::setup_boot_logo() {
 #endif
 		if (boot_logo.is_valid()) {
 			RenderingServer::get_singleton()->set_boot_image(boot_logo, boot_bg_color, boot_logo_scale, DisplayServer::MAIN_WINDOW_ID,
-						boot_logo_filter);
+					boot_logo_filter);
 
 		} else {
 #ifndef NO_DEFAULT_BOOT_LOGO
@@ -4807,7 +4807,7 @@ bool Main::iteration() {
 	GodotProfileZoneGrouped(_profile_zone, "Physics Handling");
 	for (int iters = 0; iters < advance.physics_steps; ++iters) {
 		GodotProfileZone("Physics Step")
-		GodotProfileZoneGroupedFirst(_physics_zone, "setup");
+				GodotProfileZoneGroupedFirst(_physics_zone, "setup");
 		if (Input::get_singleton()->is_agile_input_event_flushing()) {
 			Input::get_singleton()->flush_buffered_events();
 		}

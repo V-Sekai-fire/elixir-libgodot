@@ -20,13 +20,13 @@ package com.android.apksig.internal.asn1;
  * Indicates that an ASN.1 structure could not be encoded.
  */
 public class Asn1EncodingException extends Exception {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public Asn1EncodingException(String message) {
-        super(message);
-    }
+	public Asn1EncodingException(String message) {
+		super(message);
+	}
 
-    public Asn1EncodingException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public Asn1EncodingException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

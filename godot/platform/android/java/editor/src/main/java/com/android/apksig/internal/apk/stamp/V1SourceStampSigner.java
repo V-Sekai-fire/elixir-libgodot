@@ -48,62 +48,64 @@ import java.util.Map;
  * <p>V1 of the source stamp allows signing the digest of at most one signature scheme only.
  */
 public abstract class V1SourceStampSigner {
-    public static final int V1_SOURCE_STAMP_BLOCK_ID =
-            SourceStampConstants.V1_SOURCE_STAMP_BLOCK_ID;
+	public static final int V1_SOURCE_STAMP_BLOCK_ID =
+			SourceStampConstants.V1_SOURCE_STAMP_BLOCK_ID;
 
-    /** Hidden constructor to prevent instantiation. */
-    private V1SourceStampSigner() {}
+	/**
+	 * Hidden constructor to prevent instantiation.
+	 */
+	private V1SourceStampSigner() {}
 
-    public static Pair<byte[], Integer> generateSourceStampBlock(
-            SignerConfig sourceStampSignerConfig, Map<ContentDigestAlgorithm, byte[]> digestInfo)
-            throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
-        if (sourceStampSignerConfig.certificates.isEmpty()) {
-            throw new SignatureException("No certificates configured for signer");
-        }
+	public static Pair<byte[], Integer> generateSourceStampBlock(
+			SignerConfig sourceStampSignerConfig, Map<ContentDigestAlgorithm, byte[]> digestInfo)
+			throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+		if (sourceStampSignerConfig.certificates.isEmpty()) {
+			throw new SignatureException("No certificates configured for signer");
+		}
 
-        List<Pair<Integer, byte[]>> digests = new ArrayList<>();
-        for (Map.Entry<ContentDigestAlgorithm, byte[]> digest : digestInfo.entrySet()) {
-            digests.add(Pair.of(digest.getKey().getId(), digest.getValue()));
-        }
-        Collections.sort(digests, Comparator.comparing(Pair::getFirst));
+		List<Pair<Integer, byte[]>> digests = new ArrayList<>();
+		for (Map.Entry<ContentDigestAlgorithm, byte[]> digest : digestInfo.entrySet()) {
+			digests.add(Pair.of(digest.getKey().getId(), digest.getValue()));
+		}
+		Collections.sort(digests, Comparator.comparing(Pair::getFirst));
 
-        SourceStampBlock sourceStampBlock = new SourceStampBlock();
+		SourceStampBlock sourceStampBlock = new SourceStampBlock();
 
-        try {
-            sourceStampBlock.stampCertificate =
-                    sourceStampSignerConfig.certificates.get(0).getEncoded();
-        } catch (CertificateEncodingException e) {
-            throw new SignatureException(
-                    "Retrieving the encoded form of the stamp certificate failed", e);
-        }
+		try {
+			sourceStampBlock.stampCertificate =
+					sourceStampSignerConfig.certificates.get(0).getEncoded();
+		} catch (CertificateEncodingException e) {
+			throw new SignatureException(
+					"Retrieving the encoded form of the stamp certificate failed", e);
+		}
 
-        byte[] digestBytes =
-                encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(digests);
-        sourceStampBlock.signedDigests =
-                ApkSigningBlockUtils.generateSignaturesOverData(
-                        sourceStampSignerConfig, digestBytes);
+		byte[] digestBytes =
+				encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(digests);
+		sourceStampBlock.signedDigests =
+				ApkSigningBlockUtils.generateSignaturesOverData(
+						sourceStampSignerConfig, digestBytes);
 
-        // FORMAT:
-        // * length-prefixed bytes: X.509 certificate (ASN.1 DER encoded)
-        // * length-prefixed sequence of length-prefixed signatures:
-        //   * uint32: signature algorithm ID
-        //   * length-prefixed bytes: signature of signed data
-        byte[] sourceStampSignerBlock =
-                encodeAsSequenceOfLengthPrefixedElements(
-                        new byte[][] {
-                            sourceStampBlock.stampCertificate,
-                            encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(
-                                    sourceStampBlock.signedDigests),
-                        });
+		// FORMAT:
+		// * length-prefixed bytes: X.509 certificate (ASN.1 DER encoded)
+		// * length-prefixed sequence of length-prefixed signatures:
+		//   * uint32: signature algorithm ID
+		//   * length-prefixed bytes: signature of signed data
+		byte[] sourceStampSignerBlock =
+				encodeAsSequenceOfLengthPrefixedElements(
+						new byte[][] {
+								sourceStampBlock.stampCertificate,
+								encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(
+										sourceStampBlock.signedDigests),
+						});
 
-        // FORMAT:
-        // * length-prefixed stamp block.
-        return Pair.of(encodeAsLengthPrefixedElement(sourceStampSignerBlock),
-                SourceStampConstants.V1_SOURCE_STAMP_BLOCK_ID);
-    }
+		// FORMAT:
+		// * length-prefixed stamp block.
+		return Pair.of(encodeAsLengthPrefixedElement(sourceStampSignerBlock),
+				SourceStampConstants.V1_SOURCE_STAMP_BLOCK_ID);
+	}
 
-    private static final class SourceStampBlock {
-        public byte[] stampCertificate;
-        public List<Pair<Integer, byte[]>> signedDigests;
-    }
+	private static final class SourceStampBlock {
+		public byte[] stampCertificate;
+		public List<Pair<Integer, byte[]>> signedDigests;
+	}
 }

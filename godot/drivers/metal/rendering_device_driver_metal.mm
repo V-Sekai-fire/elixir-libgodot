@@ -852,7 +852,6 @@ RDD::FenceID RenderingDeviceDriverMetal::fence_create() {
 }
 
 void RenderingDeviceDriverMetal::frame_cleanup(FenceID p_fence) {
-
 }
 
 Error RenderingDeviceDriverMetal::fence_wait(FenceID p_fence) {

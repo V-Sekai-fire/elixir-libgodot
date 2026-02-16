@@ -35,8 +35,8 @@
 #include "drivers/vulkan/rendering_native_surface_vulkan.h"
 #include "rendering_context_driver_vulkan_windows.h"
 
-#include "rendering_native_surface_windows.h"
 #include "drivers/vulkan/rendering_native_surface_vulkan.h"
+#include "rendering_native_surface_windows.h"
 
 #include "drivers/vulkan/godot_vulkan.h"
 

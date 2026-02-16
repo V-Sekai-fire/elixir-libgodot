@@ -17,6 +17,7 @@
 package com.android.apksig.internal.util;
 
 import com.android.apksig.util.DataSink;
+
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -25,35 +26,34 @@ import java.nio.ByteBuffer;
  * Data sink which stores all received data into the associated {@link ByteBuffer}.
  */
 public class ByteBufferSink implements DataSink {
+	private final ByteBuffer mBuffer;
 
-    private final ByteBuffer mBuffer;
+	public ByteBufferSink(ByteBuffer buffer) {
+		mBuffer = buffer;
+	}
 
-    public ByteBufferSink(ByteBuffer buffer) {
-        mBuffer = buffer;
-    }
+	public ByteBuffer getBuffer() {
+		return mBuffer;
+	}
 
-    public ByteBuffer getBuffer() {
-        return mBuffer;
-    }
+	@Override
+	public void consume(byte[] buf, int offset, int length) throws IOException {
+		try {
+			mBuffer.put(buf, offset, length);
+		} catch (BufferOverflowException e) {
+			throw new IOException(
+					"Insufficient space in output buffer for " + length + " bytes", e);
+		}
+	}
 
-    @Override
-    public void consume(byte[] buf, int offset, int length) throws IOException {
-        try {
-            mBuffer.put(buf, offset, length);
-        } catch (BufferOverflowException e) {
-            throw new IOException(
-                    "Insufficient space in output buffer for " + length + " bytes", e);
-        }
-    }
-
-    @Override
-    public void consume(ByteBuffer buf) throws IOException {
-        int length = buf.remaining();
-        try {
-            mBuffer.put(buf);
-        } catch (BufferOverflowException e) {
-            throw new IOException(
-                    "Insufficient space in output buffer for " + length + " bytes", e);
-        }
-    }
+	@Override
+	public void consume(ByteBuffer buf) throws IOException {
+		int length = buf.remaining();
+		try {
+			mBuffer.put(buf);
+		} catch (BufferOverflowException e) {
+			throw new IOException(
+					"Insufficient space in output buffer for " + length + " bytes", e);
+		}
+	}
 }

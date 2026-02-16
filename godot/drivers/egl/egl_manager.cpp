@@ -60,19 +60,28 @@ extern "C" EGLAPI EGLDisplay EGLAPIENTRY eglGetPlatformDisplayEXT(EGLenum platfo
 #endif
 #endif
 
-static const char* getEGLErrorMessage(EGLint errorCode) {
-    switch (errorCode) {
-        case EGL_SUCCESS: return "Success";
-        case EGL_NOT_INITIALIZED: return "Not initialized";
-        case EGL_BAD_ALLOC: return "Bad alloc";
-        case EGL_BAD_DISPLAY: return "Bad display";
-        case EGL_BAD_PARAMETER: return "Bad parameter";
-        case EGL_BAD_SURFACE: return "Bad surface";
-        case EGL_BAD_NATIVE_WINDOW: return "Bad native window";
-        case EGL_CONTEXT_LOST: return "Context lost";
-        // Add more cases as needed
-        default: return "Unknown error";
-    }
+static const char *getEGLErrorMessage(EGLint errorCode) {
+	switch (errorCode) {
+		case EGL_SUCCESS:
+			return "Success";
+		case EGL_NOT_INITIALIZED:
+			return "Not initialized";
+		case EGL_BAD_ALLOC:
+			return "Bad alloc";
+		case EGL_BAD_DISPLAY:
+			return "Bad display";
+		case EGL_BAD_PARAMETER:
+			return "Bad parameter";
+		case EGL_BAD_SURFACE:
+			return "Bad surface";
+		case EGL_BAD_NATIVE_WINDOW:
+			return "Bad native window";
+		case EGL_CONTEXT_LOST:
+			return "Context lost";
+		// Add more cases as needed
+		default:
+			return "Unknown error";
+	}
 }
 
 // Creates and caches a GLDisplay. Returns -1 on error.
@@ -106,13 +115,13 @@ int EGLManager::_get_gldisplay_id(void *p_display) {
 #endif // EGL_EXT_platform_base
 	} else {
 		EGLNativeDisplayType native_display_type = EGL_DEFAULT_DISPLAY;
-		
+
 		if (new_gldisplay.display != nullptr) {
 			native_display_type = *((EGLNativeDisplayType *)new_gldisplay.display);
-		} 
+		}
 		new_gldisplay.egl_display = eglGetDisplay(native_display_type);
 	}
-    EGLint eglErr = eglGetError();
+	EGLint eglErr = eglGetError();
 	ERR_FAIL_COND_V_MSG(eglErr != EGL_SUCCESS, -1, vformat("Can't create an EGL display: %d", eglErr));
 
 	ERR_FAIL_COND_V_MSG(new_gldisplay.egl_display == EGL_NO_DISPLAY, -1, "Can't create an EGL display.");
@@ -397,12 +406,12 @@ Error EGLManager::window_create(DisplayServer::WindowID p_window_id, void *p_dis
 	if (GLAD_EGL_VERSION_1_5) {
 		glwindow.egl_surface = eglCreatePlatformWindowSurface(gldisplay.egl_display, gldisplay.egl_config, p_native_window, egl_attribs.ptr());
 	} else {
-		EGLNativeWindowType native_window_type = (EGLNativeWindowType) p_native_window;
+		EGLNativeWindowType native_window_type = (EGLNativeWindowType)p_native_window;
 		glwindow.egl_surface = eglCreateWindowSurface(gldisplay.egl_display, gldisplay.egl_config, native_window_type, nullptr);
 	}
 
 	if (glwindow.egl_surface == EGL_NO_SURFACE) {
-        EGLint error = eglGetError();
+		EGLint error = eglGetError();
 		ERR_FAIL_V_MSG(ERR_CANT_CREATE, vformat("Unable to create window surface: 0x%x (%s)", error, getEGLErrorMessage(error)));
 	}
 
@@ -577,10 +586,10 @@ Error EGLManager::initialize(void *p_native_display) {
 		print_verbose("EGL: EGL_EXT_platform_base not found during init, using default platform.");
 
 		EGLNativeDisplayType native_display_type = EGL_DEFAULT_DISPLAY;
-		
+
 		if (p_native_display != nullptr) {
 			native_display_type = *((EGLNativeDisplayType *)p_native_display);
-		} 
+		}
 		tmp_display = eglGetDisplay(native_display_type);
 	}
 
@@ -674,9 +683,9 @@ EGLManager::~EGLManager() {
 		}
 		eglTerminate(disp.egl_display);
 	}
-    #if defined(GLAD_ENABLED) && !defined(EGL_STATIC)
-    gladLoaderUnloadEGL();
-    #endif
+#if defined(GLAD_ENABLED) && !defined(EGL_STATIC)
+	gladLoaderUnloadEGL();
+#endif
 }
 
 #endif // EGL_ENABLED
