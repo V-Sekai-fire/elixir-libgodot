@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+from platform_ios_builders import generate_bundle
+
+from platform_methods import combine_libs_apple_embedded
+
+Import("env")
+
+
+common_ios_lib_files = [
+    "os_ios.mm",
+]
+
+ios_lib_files = [
+    "device_metrics.mm",
+    "display_layer_ios.mm",
+    "display_server_ios.mm",
+    "godot_view_ios.mm",
+    "main_ios.mm",
+]
+
+ios_libgodot_files = [
+    "libgodot_ios.mm",
+]
+
+env_ios = env.Clone()
+
+if env["library_type"] != "executable":
+    ios_lib = env_ios.add_library("ios", common_ios_lib_files + ios_libgodot_files)
+else:
+    ios_lib = env_ios.add_library("ios", common_ios_lib_files + ios_lib_files)
+
+# (iOS) Enable module support
+env_ios.Append(CCFLAGS=["-fmodules", "-fcxx-modules"])
+
+combine_command = env_ios.CommandNoCache(
+    "#bin/libgodot" + env_ios["LIBSUFFIX"], [ios_lib] + env_ios["LIBS"], env.Run(combine_libs_apple_embedded)
+)
+
+if env["generate_bundle"]:
+    env.AlwaysBuild(env.CommandNoCache("generate_bundle", combine_command, env.Run(generate_bundle)))
