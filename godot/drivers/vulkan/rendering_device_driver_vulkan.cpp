@@ -2486,12 +2486,12 @@ static_assert(ENUM_MEMBERS_EQUAL(RDD::BARRIER_ACCESS_FRAGMENT_SHADING_RATE_ATTAC
 static_assert(ENUM_MEMBERS_EQUAL(RDD::BARRIER_ACCESS_FRAGMENT_DENSITY_MAP_ATTACHMENT_READ_BIT, VK_ACCESS_FRAGMENT_DENSITY_MAP_READ_BIT_EXT));
 
 void RenderingDeviceDriverVulkan::command_pipeline_barrier(
-		CommandBufferID p_cmd_buffer,
-		BitField<PipelineStageBits> p_src_stages,
-		BitField<PipelineStageBits> p_dst_stages,
-		VectorView<RDD::MemoryBarrier> p_memory_barriers,
-		VectorView<BufferBarrier> p_buffer_barriers,
-		VectorView<TextureBarrier> p_texture_barriers) {
+CommandBufferID p_cmd_buffer,
+BitField<PipelineStageBits> p_src_stages,
+BitField<PipelineStageBits> p_dst_stages,
+VectorView<MemoryBarrier> p_memory_barriers,
+VectorView<BufferBarrier> p_buffer_barriers,
+VectorView<TextureBarrier> p_texture_barriers) {
 	VkMemoryBarrier *vk_memory_barriers = ALLOCA_ARRAY(VkMemoryBarrier, p_memory_barriers.size());
 	for (uint32_t i = 0; i < p_memory_barriers.size(); i++) {
 		vk_memory_barriers[i] = {};
