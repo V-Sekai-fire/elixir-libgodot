@@ -9,6 +9,7 @@ GODOT_CPP_DIR="$BASE_DIR/godot-cpp"
 SWIFT_GODOT_DIR="$BASE_DIR/SwiftGodot"
 SWIFT_GODOT_KIT_DIR="$BASE_DIR/SwiftGodotKit"
 BUILD_DIR=$BASE_DIR/build
+BUILD_GDEXTENSION_DIR="$BUILD_DIR/gdextension"
 
 host_system="$(uname -s)"
 host_arch="$(uname -m)"
@@ -18,11 +19,18 @@ target_arch=""
 host_build_options=""
 target_build_options=""
 lib_suffix="so"
+host_exe_suffix=""
 host_debug=1
 debug=1
+dev_build=0
 force_host_rebuild=0
 update_api=0
 simulator=0
+library_type="auto"
+profiler_type=""
+headless=0
+
+angle_libs="$BASE_DIR/ANGLE"
 
 case "$host_system" in
     Linux)
@@ -35,6 +43,13 @@ case "$host_system" in
         cpus="$(sysctl -n hw.logicalcpu)"
         target_platform="macos"
         lib_suffix="dylib"
+    ;;
+    MINGW*|MSYS*|CYGWIN*)
+        host_platform="windows"
+        cpus="$(nproc 2>/dev/null || echo 1)"
+        target_platform="windows"
+        lib_suffix="dll"
+        host_exe_suffix=".exe"
     ;;
     *)
         echo "System $host_system is unsupported"
@@ -62,6 +77,10 @@ do
         --debug)
             debug=1
         ;;
+        --dev)
+            debug=1
+            dev_build=1
+        ;;
         --release)
             debug=0
         ;;
@@ -69,29 +88,97 @@ do
             shift
             target_platform="${1:-}"
         ;;
+        --no-target)
+            target_platform=""
+        ;;
         --simulator)
             simulator=1
         ;;
+        --target-arch)
+            shift
+            target_arch="${1:-}"
+        ;;
+        --library-type)
+            shift
+            library_type="${1:-}"
+        ;;
+        --profiler-type)
+            shift
+            profiler_type="${1:-}"
+        ;;
+        --no-x11)
+            target_build_options="$target_build_options x11=no"
+        ;;
+        --no-wayland)
+            target_build_options="$target_build_options wayland=no"
+        ;;
+        --headless)
+            headless=1
+        ;;
         *)
-            echo "Usage: $0 [--host-debug] [--host-rebuild] [--host-debug] [--host-release] [--debug] [--release] [--update-api] [--target <target platform>]"
+            echo "Usage: $0 [--host-debug] [--host-rebuild] [--host-debug] [--host-release] [--debug] [--release] [--update-api] [--target <target platform>] [--target-arch <target platform>] [--library-type <library type>] [--profiler-type <profiler type>] [--headless]"
             exit 1
         ;;
     esac
     shift
 done
 
+target_build_options="$target_build_options opengl3=yes"
+
 if [ "$target_platform" = "ios" ]
 then
-    target_arch="arm64"
     target="template_release"
+    target_build_options="$target_build_options vulkan=no metal=yes library_type=static_library"
     lib_suffix="a"
     if [ $simulator -eq 1 ]
     then
         target_build_options="$target_build_options ios_simulator=true"
-        target_arch="$host_arch"
+    fi
+    if [ "$target_arch" = "" ]
+    then
+        target_arch="arm64"
     fi
 fi
 
+if [ "$target_platform" = "android" ]
+then
+    target_build_options="$target_build_options vulkan=yes angle_libs=$angle_libs"
+    target="template_release"
+    if [ "$library_type" = "auto" ]
+    then
+        library_type="shared_library"
+    fi
+    if [ "$target_arch" = "" ]
+    then
+        target_arch="arm64"
+    fi
+    if [ "$library_type" = "static_library" ]
+    then
+        lib_suffix="a"
+        target_build_options="$target_build_options library_type=static_library"
+    else
+        lib_suffix="so"
+        target_build_options="$target_build_options library_type=shared_library"
+    fi
+fi
+
+# For desktop targets (macOS/Linux), default to building a shared library.
+# The host build still produces an editor executable, which is used for dumping the GDExtension API.
+if [ "$target_platform" != "ios" ] && [ "$target_platform" != "android" ]
+then
+    if [ "$library_type" = "auto" ]
+    then
+        library_type="shared_library"
+    fi
+    if [ "$library_type" = "static_library" ]
+    then
+        lib_suffix="a"
+        target_build_options="$target_build_options library_type=static_library"
+    elif [ "$library_type" = "shared_library" ]
+    then
+        target_build_options="$target_build_options library_type=shared_library"
+    fi
+fi
 
 if [ "$target_arch" = "" ]
 then
@@ -104,6 +191,9 @@ if [ $host_debug -eq 1 ]
 then
     host_build_options="$host_build_options dev_build=yes"
     host_godot_suffix="$host_godot_suffix.dev"
+else
+    host_build_options="$host_build_options" 
+    # host_build_options="$host_build_options production=yes optimize=size lto=full"
 fi
 
 host_godot_suffix="$host_godot_suffix.$host_arch"
@@ -112,49 +202,162 @@ target_godot_suffix="$target_platform.$target"
 
 if [ $debug -eq 1 ]
 then
-    if [ "$target_platform" = "ios" ]
+    if [ "$target_platform" = "ios" ] || [ "$target_platform" = "android" ] 
     then
         target="template_debug"
         target_godot_suffix="$target_platform.$target"
     fi
-    target_build_options="$target_build_options dev_build=yes"
+fi
+
+if [ $dev_build -eq 1 ]
+then
+    target_build_options="$target_build_options dev_build=yes lto=none"
     target_godot_suffix="$target_godot_suffix.dev"
+    angle_libs="$angle_libs/debug"
+else
+    angle_libs="$angle_libs/release"
+fi
+
+if [ "$profiler_type" = "tracy" ]
+then
+    host_build_options="$host_build_options profiler=tracy"
+    target_build_options="$target_build_options profiler=tracy"
+elif [ "$profiler_type" = "perfetto" ]
+then
+    host_build_options="$host_build_options profiler=perfetto"
+    target_build_options="$target_build_options profiler=perfetto"
+fi
+
+if [ $dev_build -eq 0 ] && [ $debug -eq 0 ]
+then
+    target_build_options="$target_build_options production=yes"
+    # Release build
+    if [ "$target_platform" = "android" ]
+    then
+        target_build_options="$target_build_options debug_symbols=yes optimize=speed_trace lto=none"
+    else
+        target_build_options="$target_build_options optimize=speed_trace lto=full"
+    fi
 fi
 
 target_godot_suffix="$target_godot_suffix.$target_arch"
 
-host_godot="$GODOT_DIR/bin/godot.$host_godot_suffix"
+host_godot="$GODOT_DIR/bin/godot.$host_godot_suffix$host_exe_suffix"
 target_godot="$GODOT_DIR/bin/libgodot.$target_godot_suffix.$lib_suffix"
+
+mkdir -p $BUILD_DIR
 
 if [ ! -x $host_godot ] || [ $force_host_rebuild -eq 1 ]
 then
     rm -f $host_godot
     cd $GODOT_DIR
     scons p=$host_platform target=$host_target $host_build_options
+    cp -vf $host_godot $BUILD_DIR/godot
 fi
 
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_GDEXTENSION_DIR
 
-if [ $update_api -eq 1 ]
+if [ $update_api -eq 1 ] || [ ! -f $BUILD_GDEXTENSION_DIR/extension_api.json ]
 then
-    cd $BUILD_DIR
-    $host_godot --dump-extension-api
-    cp -v $BUILD_DIR/extension_api.json $GODOT_CPP_DIR/gdextension/
-    cp -v $GODOT_DIR/core/extension/gdextension_interface.h $GODOT_CPP_DIR/gdextension/
-    cp -v $GODOT_DIR/core/extension/libgodot.h $GODOT_CPP_DIR/gdextension/
-    cp -v $BUILD_DIR/extension_api.json $SWIFT_GODOT_DIR/Sources/ExtensionApi/
-    cp -v $GODOT_DIR/core/extension/gdextension_interface.h $SWIFT_GODOT_DIR/Sources/GDExtension/include/
-
+    cd $BUILD_GDEXTENSION_DIR
+    $host_godot --headless --dump-extension-api
     echo "Successfully updated the GDExtension API."
+fi
+
+# Always keep headers in sync for downstream consumers (samples, bindings).
+cp -v $GODOT_DIR/core/extension/gdextension_interface.h $BUILD_GDEXTENSION_DIR/
+cp -v $GODOT_DIR/core/extension/libgodot.h $BUILD_GDEXTENSION_DIR/
+
+if [ "$target_platform" = "" ]
+then
+    echo "No target selected."
     exit 0
 fi
 
-cd $GODOT_DIR
-scons p=$target_platform target=$target arch=$target_arch $target_build_options library_type=shared_library
-
-if [ "$target_platform" = "ios" ]
+# Headless mode: build a libgodot intended for embedded/headless usage.
+# This avoids pulling any window-system dependencies and renderer backends.
+# Useful for CI and for host processes that do not need rendering.
+if [ $headless -eq 1 ]
 then
-    $SWIFT_GODOT_KIT_DIR/scripts/make-libgodot.framework $GODOT_DIR $BUILD_DIR $target
-else
-    cp -v $target_godot $BUILD_DIR/libgodot.$lib_suffix
+    # Disable window system backends on Linux/BSD.
+    if [ "$target_platform" = "linuxbsd" ]
+    then
+        target_build_options="$target_build_options x11=no wayland=no"
+    fi
+
+    # Disable SDL input driver as it may transitively include X11/Wayland headers.
+    target_build_options="$target_build_options sdl=no"
+
+    # Disable renderer backends.
+    target_build_options="$target_build_options vulkan=no opengl3=no metal=no d3d12=no"
+fi
+
+cd $GODOT_DIR
+scons p=$target_platform target=$target arch=$target_arch $target_build_options swappy=no
+
+# Godot may place the final shared library under bin/obj/bin/ depending on target/platform.
+# Resolve the real output path so the copy steps below work reliably (and don't pick up stale binaries).
+alt_target_godot="$GODOT_DIR/bin/obj/bin/libgodot.$target_godot_suffix.$lib_suffix"
+resolved_target_godot="$(ls -t "$alt_target_godot" "$target_godot" 2>/dev/null | head -n 1 || true)"
+
+if [ "${resolved_target_godot:-}" = "" ]
+then
+    found_target_godot="$(find "$GODOT_DIR/bin" -maxdepth 6 -name "libgodot.$target_godot_suffix.$lib_suffix" -print -quit 2>/dev/null || true)"
+    resolved_target_godot="${found_target_godot:-}"
+fi
+
+if [ "${resolved_target_godot:-}" = "" ] || [ ! -f "$resolved_target_godot" ]
+then
+    echo "Failed to locate built libgodot output for suffix '$target_godot_suffix'"
+    exit 1
+fi
+
+target_godot="$resolved_target_godot"
+echo "Using libgodot output: $target_godot"
+
+# For desktop development and samples, expose a stable name under build/.
+if [ "$target_platform" = "$host_platform" ] && [ "$library_type" != "executable" ]
+then
+    mkdir -p $BUILD_DIR
+    rm -f $BUILD_DIR/libgodot.*
+    cp -vf $target_godot $BUILD_DIR/libgodot.$lib_suffix
+fi
+
+function godot_to_android_arch() {
+    godot_arch="$1"
+    case "$godot_arch" in
+        arm64)
+            echo "arm64-v8a"
+            ;;
+        arm32)
+            echo "armeabi-v7a"
+            ;;
+        *)
+            echo "Unsupported arch: $godot_arch"
+            exit 1
+    esac
+}
+
+if [ "$target_platform" = "android" ]
+then
+    android_arch="$(godot_to_android_arch $target_arch)"
+    android_build_type="release"
+    android_target_build_type="release"
+    if [ $debug -eq 1 ]
+    then
+        android_build_type="debug"
+        android_target_build_type="debug"
+    fi
+    if [ $dev_build -eq 1 ]
+    then
+        android_build_type="dev"
+        android_target_build_type="dev"
+    fi
+    if [ "$library_type" = "shared_library" ]
+    then
+        target_godot="$GODOT_DIR/platform/android/java/lib/libs/$android_build_type/${android_arch}/libgodot_android.so"
+    fi
+    mkdir -p $BUILD_DIR/android/$android_target_build_type/${android_arch}
+    rm -f $BUILD_DIR/android/$android_target_build_type/${android_arch}/libgodot_android.*
+    cp -vf $target_godot $BUILD_DIR/android/$android_target_build_type/${android_arch}/libgodot_android.$lib_suffix
 fi

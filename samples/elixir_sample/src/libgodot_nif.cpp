@@ -1,6 +1,7 @@
 #include <erl_nif.h>
 
 #include <dlfcn.h>
+#include <unistd.h>
 #include <cstdlib>
 #include <condition_variable>
 #include <deque>
@@ -26,11 +27,82 @@
 #include <godot_cpp/variant/string_name.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
+#include <cstdio>
+
 #ifdef __APPLE__
 #define LIBGODOT_DEFAULT_PATH "../../build/libgodot.dylib"
+#define LIBGODOT_PRIV_NAME "libgodot.dylib"
 #else
 #define LIBGODOT_DEFAULT_PATH "../../build/libgodot.so"
+#define LIBGODOT_PRIV_NAME "libgodot.so"
 #endif
+
+static bool file_exists_readable(const std::string &path) {
+    return access(path.c_str(), R_OK) == 0;
+}
+
+static std::string dirname_from_path(const char *path) {
+    if (!path) {
+        return {};
+    }
+    std::string s(path);
+    auto pos = s.find_last_of('/');
+    if (pos == std::string::npos) {
+        return {};
+    }
+    return s.substr(0, pos);
+}
+
+// Determine priv directory by locating this NIF shared library at runtime.
+// This enables shipping libgodot alongside the NIF in priv/.
+static std::string detect_priv_dir() {
+    Dl_info info;
+    if (dladdr(reinterpret_cast<void *>(&detect_priv_dir), &info) == 0) {
+        return {};
+    }
+    return dirname_from_path(info.dli_fname);
+}
+
+static std::string resolve_default_libgodot_path() {
+    // Allow explicit override.
+    if (const char *env = getenv("LIBGODOT_PATH")) {
+        if (env[0] != '\0') {
+            return std::string(env);
+        }
+    }
+
+    // Prefer repo build location for local development.
+    std::string repo_build = std::string(LIBGODOT_DEFAULT_PATH);
+    if (file_exists_readable(repo_build)) {
+        return repo_build;
+    }
+
+    // Fallback to libgodot shipped in priv/.
+    std::string priv = detect_priv_dir();
+    if (!priv.empty()) {
+        std::string candidate = priv + "/" LIBGODOT_PRIV_NAME;
+        if (file_exists_readable(candidate)) {
+            return candidate;
+        }
+    }
+
+    return repo_build;
+}
+
+static void libgodot_log_callback(LogCallbackData, const char *p_log_message, bool p_err) {
+    const char *prefix = p_err ? "[libgodot][err] " : "[libgodot] ";
+    if (p_log_message) {
+        fprintf(p_err ? stderr : stdout, "%s%s\n", prefix, p_log_message);
+    } else {
+        fprintf(p_err ? stderr : stdout, "%s<null log message>\n", prefix);
+    }
+    fflush(p_err ? stderr : stdout);
+}
+
+static bool libgodot_log_enabled() {
+    const char *env = getenv("LIBGODOT_LOG");
+    return env && env[0] == '1' && env[1] == '\0';
+}
 
 // Elixir -> Godot message queue.
 // Producer: BEAM threads calling the NIF.
@@ -252,7 +324,7 @@ std::atomic<uint64_t> worker_token{0};
 
 // Worker-owned state.
 void *worker_handle = nullptr;
-GDExtensionObjectPtr (*worker_create_instance)(int, char *[], GDExtensionInitializationFunction) = nullptr;
+GDExtensionObjectPtr (*worker_create_instance)(int, char *[], GDExtensionInitializationFunction, InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData, LogCallbackFunction, LogCallbackData) = nullptr;
 void (*worker_destroy_instance)(GDExtensionObjectPtr) = nullptr;
 GDExtensionObjectPtr worker_object = nullptr;
 godot::GodotInstance *worker_instance = nullptr;
@@ -329,11 +401,13 @@ static void worker_loop() {
                 maybe_enable_embedded_headless(req->args);
 #endif
 
+                std::string resolved_path;
                 const char *path = nullptr;
                 if (req->type == RequestType::CreateWithPath) {
                     path = req->lib_path.c_str();
                 } else {
-                    path = LIBGODOT_DEFAULT_PATH;
+                    resolved_path = resolve_default_libgodot_path();
+                    path = resolved_path.c_str();
                 }
 
                 worker_handle = dlopen(path, RTLD_LAZY);
@@ -364,7 +438,23 @@ static void worker_loop() {
                     break;
                 }
 
-                GDExtensionObjectPtr obj = worker_create_instance(static_cast<int>(argv_c.size() - 1), argv_c.data(), gdextension_default_init);
+                LogCallbackFunction log_fn = nullptr;
+                LogCallbackData log_data = nullptr;
+                if (libgodot_log_enabled()) {
+                    log_fn = &libgodot_log_callback;
+                    log_data = nullptr;
+                }
+
+                GDExtensionObjectPtr obj = worker_create_instance(
+                        static_cast<int>(argv_c.size() - 1),
+                        argv_c.data(),
+                        gdextension_default_init,
+                        nullptr,
+                        nullptr,
+                        nullptr,
+                        nullptr,
+                        log_fn,
+                        log_data);
                 if (!obj) {
                     dlclose(worker_handle);
                     worker_handle = nullptr;

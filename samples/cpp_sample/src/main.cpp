@@ -56,14 +56,14 @@ public:
         if (func_libgodot_create_godot_instance == nullptr) {
             fprintf(stderr, "Error acquiring function: %s\n", dlerror());
             dlclose(handle);
-            handle == nullptr;
+            handle = nullptr;
             return;
         }
         *(void**)(&func_libgodot_destroy_godot_instance) = dlsym(handle, "libgodot_destroy_godot_instance");
         if (func_libgodot_destroy_godot_instance == nullptr) {
             fprintf(stderr, "Error acquiring function: %s\n", dlerror());
             dlclose(handle);
-            handle == nullptr;
+            handle = nullptr;
             return;
         }
     }
@@ -82,7 +82,7 @@ public:
         if (!is_open()) {
             return nullptr;
         }
-        GDExtensionObjectPtr instance = func_libgodot_create_godot_instance(p_argc, p_argv, p_init_func);
+        GDExtensionObjectPtr instance = func_libgodot_create_godot_instance(p_argc, p_argv, p_init_func, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
         if (instance == nullptr) {
             return nullptr;
         }
@@ -96,7 +96,7 @@ public:
 
 private:
     void *handle = nullptr;
-    GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction) = nullptr;
+    GDExtensionObjectPtr (*func_libgodot_create_godot_instance)(int, char *[], GDExtensionInitializationFunction, InvokeCallbackFunction, ExecutorData, InvokeCallbackFunction, ExecutorData, LogCallbackFunction, LogCallbackData) = nullptr;
     void (*func_libgodot_destroy_godot_instance)(GDExtensionObjectPtr) = nullptr;
 };
 

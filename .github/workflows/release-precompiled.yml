@@ -1,0 +1,286 @@
+name: release-precompiled
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs_on }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            runs_on: ubuntu-22.04
+            target: x86_64-linux-gnu
+          - name: macos-arm64
+            runs_on: macos-15
+            target: aarch64-apple-darwin
+          - name: windows-x86_64
+            runs_on: windows-2022
+            target: x86_64-windows-msvc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up BEAM (Elixir/Erlang)
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.19'
+          otp-version: '28'
+
+      - name: Cache Homebrew downloads (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+          key: homebrew-${{ runner.os }}-${{ github.ref_name }}
+          restore-keys: |
+            homebrew-${{ runner.os }}-
+
+      - name: Setup dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libwayland-bin  # TODO: Figure out somehow how to embed this one.
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            clang \
+            cmake \
+            pkg-config \
+            python3 \
+            libvulkan-dev \
+            vulkan-tools \
+            git \
+            zip \
+            unzip \
+            libx11-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libxss-dev \
+
+
+      - name: Free disk space on runner
+        run: |
+          echo "Disk usage before:" && df -h
+          echo "Disk usage after:" && df -h
+      - name: Free disk space (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -eux
+          echo "Disk usage before:" && df -h
+          # The ubuntu runner image ships with large preinstalled SDKs we don't need.
+          # Removing them often frees 10+ GB and avoids "No space left on device" during link/archive steps.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/.ghcup || true
+          sudo rm -rf /usr/local/lib/android
+          sudo apt-get clean
+          echo "Disk usage after:" && df -h
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          # Vulkan on macOS is provided via MoltenVK.
+          # Keep this list conservative to avoid CI breakage from formula changes.
+          brew install cmake molten-vk vulkan-headers vulkan-loader shaderc
+
+      - name: Set up MSVC dev environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          # Semantic version range syntax or exact version of a Python version.
+          python-version: 3.8
+
+      - name: Setup SCons
+        shell: bash
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons==4.0
+          scons --version
+      - name: Restore SCons cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .scons_cache/
+          key: scons|${{ runner.os }}|${{ github.ref_name }}|${{ github.sha }}
+          restore-keys: |
+            scons|${{ runner.os }}|${{ github.ref_name }}|
+            scons|${{ runner.os }}|
+
+      - name: Build libgodot
+        if: runner.os != 'Windows'
+        env:
+          # Match upstream CI defaults and avoid DISABLE_DEPRECATED-related API mismatches.
+          # Also enable SCons cache for faster rebuilds.
+          SCONSFLAGS: cache_path=${{ github.workspace }}/.scons_cache/ deprecated=yes
+        shell: bash
+        run: |
+          ./build_libgodot.sh --release
+
+      - name: Build libgodot (Windows)
+        if: runner.os == 'Windows'
+        env:
+          SCONSFLAGS: cache_path=${{ github.workspace }}/.scons_cache/ deprecated=yes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          Write-Host "python:" (python --version)
+          Write-Host "cl:" (where.exe cl) 
+          Write-Host "ar (should be absent/unused):" 
+          try { where.exe ar } catch { Write-Host "(not found)" }
+
+          Push-Location godot
+          # Build host editor (for dumping GDExtension API).
+          scons platform=windows target=editor dev_mode=yes windows_subsystem=console use_mingw=no
+
+          # Build target libgodot (shared library for embedding).
+          scons platform=windows target=editor arch=x86_64 opengl3=yes library_type=shared_library production=yes optimize=speed_trace lto=full deprecated=yes windows_subsystem=console use_mingw=no
+
+          New-Item -ItemType Directory -Force -Path ..\build\gdextension | Out-Null
+          Copy-Item -Force bin\godot.windows.editor.x86_64.exe ..\build\godot.exe
+
+          # Dump GDExtension API.
+          Push-Location ..\build\gdextension
+          ..\godot.exe --headless --dump-extension-api
+          Pop-Location
+
+          Copy-Item -Force core\extension\gdextension_interface.h ..\build\gdextension\
+          Copy-Item -Force core\extension\libgodot.h ..\build\gdextension\
+
+          if (Test-Path bin\libgodot.windows.editor.x86_64.dll) {
+            Copy-Item -Force bin\libgodot.windows.editor.x86_64.dll ..\build\libgodot.dll
+            Write-Host "Copied libgodot.dll from:" (Resolve-Path bin\libgodot.windows.editor.x86_64.dll)
+          } else {
+            Write-Error "Failed to locate bin\\libgodot.windows.editor.x86_64.dll"
+          }
+
+          Pop-Location
+
+      - name: Save SCons cache
+        uses: actions/cache/save@v4
+        with:
+          path: .scons_cache/
+          key: scons|${{ runner.os }}|${{ github.ref_name }}|${{ github.sha }}
+
+      - name: Build and precompile NIF (elixir_make)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd samples/elixir_sample
+          mix deps.get
+          # Avoid any download attempt during CI artefact generation.
+          export LIBGODOT_FORCE_BUILD=1
+          # Run in a single Mix invocation so the Precompiler module is compiled+loaded.
+          MIX_ENV=prod mix do compile --force + elixir_make.precompile
+
+      - name: Set up MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          path-type: minimal
+          install: >-
+            make
+            tar
+            unzip
+
+      - name: Build and precompile NIF (elixir_make) (Windows/MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          cd samples/elixir_sample
+          mix deps.get
+          export LIBGODOT_FORCE_BUILD=1
+          MIX_ENV=prod mix do compile --force + elixir_make.precompile
+
+      - name: Collect precompiled artefacts
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd samples/elixir_sample
+
+          mkdir -p dist
+
+          CACHE_DIR=$(MIX_ENV=prod MIX_QUIET=1 mix run --no-deps-check --no-compile --no-start -e 'IO.puts(ElixirMake.Artefact.cache_dir())' | tail -n 1)
+          echo "elixir_make cache dir: ${CACHE_DIR}"
+
+          # Copy the generated tarball + checksum sidecar(s) into dist for upload.
+          cp -v "${CACHE_DIR}"/*.tar.gz dist/
+          cp -v "${CACHE_DIR}"/*.tar.gz.sha256 dist/ || true
+
+          # Also include checksum.exs written by elixir_make.precompile.
+          test -f checksum.exs
+          cp -v checksum.exs dist/
+
+      - name: Collect precompiled artefacts (Windows/MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          cd samples/elixir_sample
+
+          mkdir -p dist
+
+          CACHE_DIR=$(MIX_ENV=prod MIX_QUIET=1 mix run --no-deps-check --no-compile --no-start -e 'IO.puts(ElixirMake.Artefact.cache_dir())' | tail -n 1)
+          echo "elixir_make cache dir: ${CACHE_DIR}"
+
+          cp -v "${CACHE_DIR}"/*.tar.gz dist/
+          cp -v "${CACHE_DIR}"/*.tar.gz.sha256 dist/ || true
+
+          test -f checksum.exs
+          cp -v checksum.exs dist/
+
+      - name: Verify macOS libgodot install name (from tarball)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          cd samples/elixir_sample
+
+          TAR=$(ls -1 dist/*.tar.gz | head -n 1)
+          TMPDIR=$(mktemp -d)
+          tar -xzf "${TAR}" -C "${TMPDIR}"
+          otool -D "${TMPDIR}/libgodot.dylib" | tail -n 1 | grep -F "@rpath/libgodot.dylib"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          # This is an intermediate artefact drop created from main.
+          # It is intentionally a draft/prerelease and uses a unique per-commit tag.
+          draft: true
+          prerelease: true
+          tag_name: "draft-${{ github.sha }}"
+          name: "draft-${{ github.sha }}"
+          target_commitish: "${{ github.sha }}"
+          files: |
+            samples/elixir_sample/dist/*

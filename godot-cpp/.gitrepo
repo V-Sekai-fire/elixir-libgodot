@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/migeran/godot-cpp
+	branch = ace561a285e8a2374e3d61457032d2e14afd5d03
+	commit = ace561a285e8a2374e3d61457032d2e14afd5d03
+	parent = 272bda1e4bb4cd8647c80fe615e9e6d18eaa0baa
+	method = merge
+	cmdver = 0.4.9
