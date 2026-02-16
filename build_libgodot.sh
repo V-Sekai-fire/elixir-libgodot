@@ -180,6 +180,7 @@ then
     fi
 fi
 
+
 if [ "$target_arch" = "" ]
 then
     target_arch="$host_arch"
