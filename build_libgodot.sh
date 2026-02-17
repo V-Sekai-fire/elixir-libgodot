@@ -250,6 +250,7 @@ target_godot_suffix="$target_godot_suffix.$target_arch"
 
 host_godot="$GODOT_DIR/bin/godot.$host_godot_suffix$host_exe_suffix"
 target_godot="$GODOT_DIR/bin/libgodot.$target_godot_suffix.$lib_suffix"
+target_godot_alt_name="$GODOT_DIR/bin/godot.$target_godot_suffix.$lib_suffix"
 
 mkdir -p $BUILD_DIR
 
@@ -304,17 +305,18 @@ scons p=$target_platform target=$target arch=$target_arch $target_build_options 
 # Godot may place the final shared library under bin/obj/bin/ depending on target/platform.
 # Resolve the real output path so the copy steps below work reliably (and don't pick up stale binaries).
 alt_target_godot="$GODOT_DIR/bin/obj/bin/libgodot.$target_godot_suffix.$lib_suffix"
-resolved_target_godot="$(ls -t "$alt_target_godot" "$target_godot" 2>/dev/null | head -n 1 || true)"
+alt_target_godot_alt_name="$GODOT_DIR/bin/obj/bin/godot.$target_godot_suffix.$lib_suffix"
+resolved_target_godot="$(ls -t "$alt_target_godot" "$alt_target_godot_alt_name" "$target_godot" "$target_godot_alt_name" 2>/dev/null | head -n 1 || true)"
 
 if [ "${resolved_target_godot:-}" = "" ]
 then
-    found_target_godot="$(find "$GODOT_DIR/bin" -maxdepth 6 -name "libgodot.$target_godot_suffix.$lib_suffix" -print -quit 2>/dev/null || true)"
+    found_target_godot="$(find "$GODOT_DIR/bin" -maxdepth 6 \( -name "libgodot.$target_godot_suffix.$lib_suffix" -o -name "godot.$target_godot_suffix.$lib_suffix" \) -print -quit 2>/dev/null || true)"
     resolved_target_godot="${found_target_godot:-}"
 fi
 
 if [ "${resolved_target_godot:-}" = "" ] || [ ! -f "$resolved_target_godot" ]
 then
-    echo "Failed to locate built libgodot output for suffix '$target_godot_suffix'"
+    echo "Failed to locate built libgodot/godot output for suffix '$target_godot_suffix'"
     exit 1
 fi
 
