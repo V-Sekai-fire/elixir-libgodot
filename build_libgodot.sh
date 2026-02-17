@@ -236,6 +236,11 @@ then
     if [ "$target_platform" = "android" ]
     then
         target_build_options="$target_build_options debug_symbols=yes optimize=speed_trace lto=none"
+    elif [ "$target_platform" = "windows" ]
+    then
+        # Full LTO on Windows can trigger very large intermediate/static artefacts
+        # and linker size-limit failures in CI (e.g. LNK1248).
+        target_build_options="$target_build_options optimize=speed_trace lto=none"
     else
         target_build_options="$target_build_options optimize=speed_trace lto=full"
     fi
