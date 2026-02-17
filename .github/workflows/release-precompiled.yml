@@ -216,7 +216,9 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          export PATH="$(cygpath -u "$INSTALL_DIR_FOR_ELIXIR")/bin:$(cygpath -u "$INSTALL_DIR_FOR_OTP")/bin:$PATH"
           cd samples/elixir_sample
+          mix --version
           mix deps.get
           export LIBGODOT_FORCE_BUILD=1
           MIX_ENV=prod mix do compile --force + elixir_make.precompile
@@ -246,6 +248,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          export PATH="$(cygpath -u "$INSTALL_DIR_FOR_ELIXIR")/bin:$(cygpath -u "$INSTALL_DIR_FOR_OTP")/bin:$PATH"
           cd samples/elixir_sample
 
           mkdir -p dist
