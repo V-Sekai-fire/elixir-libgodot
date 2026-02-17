@@ -619,11 +619,14 @@ def configure_mingw(env: "SConsEnvironment"):
         env.PrependENVPath("PATH", os.path.join(env["mingw_prefix"], "bin"))
 
     # In case the command line to AR is too long, use a response file.
+    # MinGW's ar treats backslash as escape when reading the response file,
+    # so we must normalize paths to forward slashes (TEMPFILEARGESCFUNC) for
+    # both native Windows and cross-compile, otherwise ar fails with
+    # "No such file or directory" (e.g. binobj... instead of bin\obj\...).
     env["ARCOM_ORIG"] = env["ARCOM"]
     env["ARCOM"] = "${TEMPFILE('$ARCOM_ORIG', '$ARCOMSTR')}"
     env["TEMPFILESUFFIX"] = ".rsp"
-    if os.name == "nt":
-        env["TEMPFILEARGESCFUNC"] = tempfile_arg_esc_func
+    env["TEMPFILEARGESCFUNC"] = tempfile_arg_esc_func
 
     ## Build type
 
