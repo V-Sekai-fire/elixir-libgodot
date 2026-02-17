@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/V-Sekai/godot.git
-	branch = vsk-libgodot-4.5
-	commit = 5b826042b72a040e31bffde2e1fa0c4da241c8b7
-	parent = 892ab598865d9df44f95d14cd9406345483555b5
+	remote = https://github.com/migeran/godot.git
+	branch = 9264dc65cf7435ea4ad811129ebbc656f2fdd907
+	commit = 9264dc65cf7435ea4ad811129ebbc656f2fdd907
+	parent = 5b34e9fc520440466ef12d896c14d1f6ee34fe26
 	method = merge
 	cmdver = 0.4.9
